@@ -63,24 +63,28 @@ float AjC = 0.0, AjC2 = 0.0, AjL = 0.0, AjR = 0.0;
 //調整パラメータ
 //default
 /*float KpLR = 8.0;
-float KdLR = 15.0;
-float KwLR = 1.4;*/
+  float KdLR = 15.0;
+  float KwLR = 1.4;*/
 float KpLR = 8.0;
 float KdLR = 15.0;
 float KwLR = 1.4;
 
 //default
 /*float KpC = 12.0;
-float KdC = 22.0;
-float KwC = 1.4;*/
+  float KdC = 22.0;
+  float KwC = 1.4;*/
 //これで一応倒立
 /*float KpC = 15.0;
-float KdC = 20.0;
-float KwC = 1.5;*/
-float KpC = 17.0;
+  float KdC = 20.0;
+  float KwC = 1.5;*/
+/*float KpC = 17.0;
 float KdC = 23.0;
-float KwC = 1.4;
+float KwC = 1.4;*/
 
+//調整用
+float KpC = 2.5;
+float KdC = 3.0;
+float KwC = 0.1;
 
 float KC = 9.0, KC2 = 5.0, KLR = 12.0;
 
@@ -130,7 +134,7 @@ void setup() {
   pinMode(ENCL_A, INPUT);
   pinMode(ENCL_B, INPUT);
   pinMode(ENCR_A, INPUT);
-  pinMode(ENCR_B, INPUT); 
+  pinMode(ENCR_B, INPUT);
   pinMode(ENCC_A, INPUT);
   pinMode(ENCC_B, INPUT);
 
@@ -147,11 +151,11 @@ void setup() {
 
   attachInterrupt(GetUpBt, GetUp, FALLING);
   attachInterrupt(ModeBt, ModeOnOff, FALLING);
-  
+
   attachInterrupt(ENCL_A, ENCL_READ, CHANGE);
   attachInterrupt(ENCL_B, ENCL_READ, CHANGE);
   attachInterrupt(ENCR_A, ENCR_READ, CHANGE);
-  attachInterrupt(ENCR_B, ENCR_READ, CHANGE);  
+  attachInterrupt(ENCR_B, ENCR_READ, CHANGE);
   attachInterrupt(ENCC_A, ENCC_READ, CHANGE);
   attachInterrupt(ENCC_B, ENCC_READ, CHANGE);
 
@@ -170,7 +174,7 @@ void setup() {
   mpu.setXGyroOffset(-433);
   mpu.setYGyroOffset(3);
   mpu.setZGyroOffset(60);
-  
+
   //センサオフセット算出
   offset_cal();
 
@@ -195,7 +199,7 @@ void setup() {
   ledcSetup(CH_ServoC, 50, 16);
   ledcAttachPin(servoC, CH_ServoC);
   ledcWrite(CH_ServoC, servoIniC);
-  delay(500); 
+  delay(500);
 
   //ディスプレイ表示 タスク
   xTaskCreatePinnedToCore(
@@ -204,7 +208,7 @@ void setup() {
     ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
     ,  NULL
     ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    ,  NULL 
+    ,  NULL
     ,  0);
 }
 
@@ -213,9 +217,9 @@ void loop() {
   nowTime = micros();
   loopTime = nowTime - oldTime;
   oldTime = nowTime;
-  
+
   dt = (float)loopTime / 1000000.0; //sec
-  
+
   //モータの角速度算出
   float theta_LdotWheel = -1.0 * float(enc_countL) * 3.6 / dt; //2×180°/100=3.6
   enc_countL = 0;
@@ -226,237 +230,47 @@ void loop() {
 
   get_theta();
   get_gyro_data();
-    
+
   //カルマンフィルタ 姿勢 傾き
   kalAngleL = kalmanL.getAngle(theta_L, theta_Ldot, dt);
   kalAngleL2 = kalAngleL - degL;
   kalAngleR = kalmanR.getAngle(theta_R, theta_Rdot, dt);
   kalAngleR2 = kalAngleR - degR;
   kalAngleC = kalmanC.getAngle(theta_Y, theta_Ydot, dt);
-  
+
   //カルマンフィルタ 姿勢 角速度
   kalAngleDotL = kalmanL.getRate();
   kalAngleDotR = kalmanR.getRate();
   kalAngleDotC = kalmanC.getRate();
 
   //Omega Z
-  omegaZ = theta_Ydot * sin(theta_X * PI/180.0) / cos(theta_Y * PI/180.0) + theta_Zdot * cos(theta_X * PI/180.0) / cos(theta_Y * PI/180.0);
+  omegaZ = theta_Ydot * sin(theta_X * PI / 180.0) / cos(theta_Y * PI / 180.0) + theta_Zdot * cos(theta_X * PI / 180.0) / cos(theta_Y * PI / 180.0);
 
-  //ブレーキ
-  if(Lok == 3 && fabs(kalAngleL2) > 20.0){
-    digitalWrite(brakeL, LOW);
-    if(Cok != 0){
-      digitalWrite(brakeC, LOW);
-      Cok = 0;
-      AjC = 0.0;
-      AjC2 = 0.0; 
-    }
-    Lok = 0;
-    AjL = 0.0;
-  }
-  if(Rok == 3 && fabs(kalAngleR2) > 20.0){
-    digitalWrite(brakeR, LOW);
-    if(Cok != 0){
-      digitalWrite(brakeC, LOW);
-      Cok = 0;
-      AjC = 0.0;
-      AjC2 = 0.0; 
-    }
-    Rok = 0;
-    AjR= 0.0;
-  }
-  if(Cok == 2 && fabs(kalAngleC) > 20.0){
-    digitalWrite(brakeC, LOW);
-    Cok = 0;
-    AjC = 0.0;
-    AjC2 = 0.0; 
-  }
-
-  //起き上がりY軸角度計測
-  if(Cok == 8 && dt < 1.0){
-    if(kalAngleC > getUpDeg){
-      Cok = 2;
-    }
-  }
-  if(Cok == 9 && dt < 1.0){
-    if(kalAngleC < getUpDeg){
-      Cok = 2;
-    }
-  }
-
-  //GETUPボタンプッシュ時の処理
-  if(GetUpBtState){
-    GetUpBtState = 0;
-    
-    if(Cok == 0 && (fabs(kalAngleC + AjC) > 40.0)){
-      AjC = 0.0;
-      AjC2 = 0.0; 
-      AjL = 0.0;
-      AjR = 0.0;
-      offset_cal();
-      Mode = 0;
-      getupY();
-    }
-    
-    if(Cok == 2 && (fabs(kalAngleC + AjC) < 2.0)){
-      AjL = 0.0;
-      AjR = 0.0;
-      GetUpX = 1;
-    }
-  }
-          
-  //モータ駆動
-  if (Lok == 0 && fabs(kalAngleL2) < 1.0 && kalAngleC > -30.0){
-    Lok = 1;
-    digitalWrite(brakeL, HIGH); //ブレーキ解除
-  }
-  
-  if (Rok == 0 && fabs(kalAngleR2) < 1.0 && kalAngleC < 30.0){
-    Rok = 1;
-    digitalWrite(brakeR, HIGH); //ブレーキ解除
-  }
-  
-  if(Mode == 1){
-    if (Lok != 0 && Rok != 0 && Cok == 0 && fabs(kalAngleC) < 1.0){
-      Cok = 1;
-      digitalWrite(brakeC, HIGH); //ブレーキ解除
-    }
-  }else{
-    if (Cok == 0 && fabs(kalAngleC) < 1.0){
-      Cok = 1;
-      digitalWrite(brakeC, HIGH); //ブレーキ解除
-    }
-  }
-
-  if (Lok == 1){
-    MtL = KpLR* kalAngleL2 / 90.0  + KdLR * kalAngleDotL / 1000.0 + KwLR * theta_LdotWheel / 20000.0;
-    GetUpcntL++;
-    if(GetUpcntL > 20){
-      GetUpcntL = 0;
-      Lok = 2;
-    }
-  }
-  if (Rok == 1){
-    MtR = KpLR * kalAngleR2 / 90.0  + KdLR * kalAngleDotR / 1000.0 + KwLR * theta_RdotWheel / 20000.0;
-    GetUpcntR++;
-    if(GetUpcntR > 20){
-      GetUpcntR = 0;
-      Rok = 2;
-    }
-  }
-  
-  if (Cok == 1){
-    MtC = KpC * kalAngleC / 90.0  + KdC * kalAngleDotC / 1000.0 + KwC * theta_YdotWheel / 20000.0;
-    GetUpcntC++;
-    if(GetUpcntC > 20){
-      GetUpcntC = 0;
-      Cok = 2;
-    }
-  }
-
-  if (Lok == 2){
-    AjL +=  3 * theta_LdotWheel / 1000000.0;
-    MtL = KpLR * (kalAngleL2 + AjL) / 90.0 + KdLR * kalAngleDotL / 500.0 + KwLR * theta_LdotWheel / 10000.0;
-    GetUpcntL++;
-    if(GetUpcntL > 100){
-      GetUpcntL = 0;
-      Lok = 3;
-    }
-  }
-  if (Rok == 2){
-    AjR +=  3 * theta_RdotWheel / 1000000.0;
-    MtR = KpLR * (kalAngleR2 + AjR) / 90.0 + KdLR * kalAngleDotR / 500.0 + KwLR * theta_RdotWheel / 10000.0;
-    GetUpcntR++;
-    if(GetUpcntR > 100){
-      GetUpcntR = 0;
-      Rok = 3;
-    }
-  }
-  if (Lok == 3){
-    AjL +=  KLR * theta_LdotWheel / 1000000.0;
-    MtL = KpLR * (kalAngleL2 + AjL) / 90.0 + KdLR * kalAngleDotL / 500.0 + KwLR * theta_LdotWheel / 10000.0;
-  }
-  if (Rok == 3){
-    AjR +=  KLR * theta_RdotWheel / 1000000.0;
-    MtR = KpLR * (kalAngleR2 + AjR) / 90.0 + KdLR * kalAngleDotR / 500.0 + KwLR * theta_RdotWheel / 10000.0;
-  }
-  if (Cok == 2){
-    GetUpY = 0;
-    if(Mode == 1){
-      AjC =  -KC * theta_YdotWheel / 10000.0;
-      AjC2 += KC2 * omegaZ / 1000.0;
-    }else{
-      AjC +=  3.0 * theta_YdotWheel / 1000000.0;
-      AjC2= 0.0;
-    }
-     
-    MtC = KpC * (kalAngleC + AjC) / 90.0 + KdC * (kalAngleDotC + AjC2) / 500.0 + KwC * theta_YdotWheel / 10000.0;
-  }
-    
-  MtL = max(-1.0f, min(1.0f, MtL));
-  pwmDutyL = 1023 * (1.0 - fabs(MtL));
-  MtR = max(-1.0f, min(1.0f, MtR));
-  pwmDutyR = 1023 * (1.0 - fabs(MtR));
+  digitalWrite(brakeC, HIGH);
+  MtC = KpC * (kalAngleC + AjC) / 90.0 + KdC * (kalAngleDotC + AjC2) / 500.0 + KwC * theta_YdotWheel / 10000.0;
   MtC = max(-1.0f, min(1.0f, MtC));
-  pwmDutyC = 1023 * (1.0 - fabs(MtC));
-  
-        
-  //回転方向 
-  if (Lok != 0 && Lok != 9){ 
-    if(pwmDutyL > DutyIniL){
-      digitalWrite(brakeL, LOW);
-      ledcWrite(CH_L, 1023);
-    }else if(MtL < 0.0){
-      digitalWrite(brakeL, HIGH);
-      digitalWrite(rote_pinL, LOW);
-      ledcWrite(CH_L, pwmDutyL);
-    }else{
-      digitalWrite(brakeL, HIGH);
-      digitalWrite(rote_pinL, HIGH);
-      ledcWrite(CH_L, pwmDutyL);
-    }
+  pwmDutyC = 1023 * (1.0 - fabs(MtC)) - 43.0;
+  //pwmDutyC = 980;
+  if (kalAngleC >= 0.0 && kalAngleC <= 5.0) {
+    digitalWrite(rote_pinC, HIGH);
+    ledcWrite(CH_C, pwmDutyC);
+  }
+  else if (kalAngleC < 0.0 && kalAngleC >= -5.0){
+    digitalWrite(rote_pinC, LOW);
+    ledcWrite(CH_C, pwmDutyC);
+  }
+  else{
+    digitalWrite(rote_pinC, HIGH);
+    ledcWrite(CH_C, 1023);
   }
 
-  if(Rok != 0 && Rok != 9){
-    if(pwmDutyR > DutyIniR){
-      digitalWrite(brakeR, LOW);
-      ledcWrite(CH_R, 1023);
-    }else if(MtR < 0.0){
-      digitalWrite(brakeR, HIGH);
-      digitalWrite(rote_pinR, HIGH);
-      ledcWrite(CH_R, pwmDutyR);
-    }else{
-      digitalWrite(brakeR, HIGH);
-      digitalWrite(rote_pinR, LOW);
-      ledcWrite(CH_R, pwmDutyR);
-    }
-  }
-
-  if(Cok != 0 && Cok != 8 && Cok != 9){
-    if(pwmDutyC > DutyIniC){
-      digitalWrite(brakeC, LOW);
-      ledcWrite(CH_C, 1023);
-      if(Mode == 1){
-        AjC2 = AjC2 / 2.0;
-      }
-    }else if(MtC < 0.0){
-      digitalWrite(brakeC, HIGH);
-      digitalWrite(rote_pinC, LOW);
-      ledcWrite(CH_C, pwmDutyC);
-    }else{
-      digitalWrite(brakeC, HIGH);
-      digitalWrite(rote_pinC, HIGH);
-      ledcWrite(CH_C, pwmDutyC);
-    }
-  }
-  
   Serial.print(", loopTime: ");
   Serial.print((float)loopTime / 1000.0);
   Serial.println("");
-    
-  if(GetUpY == 0){
+
+  if (GetUpY == 0) {
     delay(loopDelay);
-  }else{
+  } else {
     delay(1);
   }
 }
