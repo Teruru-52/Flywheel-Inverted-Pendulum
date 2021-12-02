@@ -5,25 +5,27 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+#define ENCL_A 32
+#define ENCL_B 33
+#define ENCR_A 39
+#define ENCR_B 36
+#define ENCC_A 35
+#define ENCC_B 34
+
 #define GetUpBt 2
 #define ModeBt 12
 
-#define ENCL_A 32
-#define ENCL_B 33
+
 #define PWM_pinL 27
 #define brakeL 19
 #define rote_pinL 23
 #define servoL 4
 
-#define ENCR_A 39
-#define ENCR_B 36
 #define PWM_pinR 25
 #define brakeR 17
 #define rote_pinR 16
 #define servoR 13
 
-#define ENCC_A 35
-#define ENCC_B 34
 #define PWM_pinC 26
 #define brakeC 18
 #define rote_pinC 5
@@ -117,216 +119,6 @@ float kalAngleL, kalAngleL2, kalAngleR, kalAngleR2, kalAngleDotL, kalAngleDotR, 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, OLED_RESET);
-
-
-//センサオフセット算出
-void offset_cal(){
-  delay(700);
-  accXoffset = 0;
-  accYoffset = 0;
-  accZoffset = 0;
-  gyroXoffset = 0;
-  gyroYoffset = 0;
-  gyroZoffset = 0;
-
-  for(int i=0; i<10; i++) {
-    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    accX = ax / 16384.0;
-    accY = ay / 16384.0;
-    accZ = az / 16384.0;
-    gyroX = gx / 131.072;
-    gyroY = gy / 131.072;
-    gyroZ = gz / 131.072;
-    delay(30);
-    
-    accXoffset += accX;
-    accYoffset += accY;
-    accZoffset += accZ;
-    gyroXoffset += gyroX;
-    gyroYoffset += gyroY;
-    gyroZoffset += gyroZ;
-  }
-
-  if(accXoffset < 0){
-    accXoffset = accXoffset / 10 + 1.0 / sqrt(2.0);
-  }else{
-    accXoffset = accXoffset / 10 - 1.0 / sqrt(2.0);
-  }
-  accYoffset /= 10;
-  accZoffset = accZoffset / 10 - 1.0 / sqrt(2.0);
-  gyroXoffset /= 10;
-  gyroYoffset /= 10;
-  gyroZoffset /= 10;
-}
-
-//加速度センサから傾きデータ取得 [deg]
-void get_theta() {
-  mpu.getAcceleration(&ax, &ay, &az);
-  accX = ax / 16384.0;
-  accY = ay / 16384.0;
-  accZ = az / 16384.0;
-  
-  //傾斜角導出 単位はdeg
-  theta_X  = atan2(-1.0 * (accY - accYoffset) , (accZ - accZoffset)) * 180.0/PI;
-  theta_Y  = atan2(-1.0 * (accX - accXoffset) , (accZ - accZoffset)) * 180.0/PI;
-  theta_L  = atan2(accY - accYoffset , -(accX - accXoffset) * sin(PI/4.0) + (accZ - accZoffset) * cos(PI/4.0)) * 180.0/PI;
-  theta_R  = atan2(accY - accYoffset , -(accX - accXoffset) * sin(-PI/4.0) + (accZ - accZoffset) * cos(-PI/4.0)) * 180.0/PI;
-}
-
-//角速度取得
-void get_gyro_data() {
-  mpu.getRotation(&gx, &gy, &gz);
-  gyroX = gx / 131.072;
-  gyroY = gy / 131.072;
-  gyroZ = gz / 131.072;
-
-  theta_Ydot = gyroY - gyroYoffset;
-  theta_Zdot = gyroZ - gyroZoffset;
-  theta_Ldot = gyroX - gyroXoffset + (gyroZ - gyroZoffset); 
-  theta_Rdot = gyroX - gyroXoffset - (gyroZ - gyroZoffset); 
-}
-
-
-//起き上がりY
-void getupY(){
-  digitalWrite(brakeC, HIGH);
-  int rotMax;
-  GetUpY = 1;
-  
-  //回転方向
-  if(kalAngleC < 0.0){
-    rotMax = rotMaxCR;
-    digitalWrite(rote_pinC, HIGH);
-    getUpDeg = -5.0;
-    Cok = 8;
-  }else{
-    rotMax = rotMaxCL;
-    digitalWrite(rote_pinC, LOW);
-    getUpDeg = 5.0;
-    Cok = 9;
-  }
-
-  for(int i = 1023; i >= rotMax; i--){
-    ledcWrite(CH_C, i);
-    delay(5);
-  }
-  ledcWrite(CH_C, rotMax);
-  delay(300);
-
-  ledcWrite(CH_C, 1023);
-  if(kalAngleC < 0.0){
-    ledcWrite(CH_ServoC, servoIniC + servoBrakeC); //servo brake
-  }else{
-    ledcWrite(CH_ServoC, servoIniC - servoBrakeC); //servo brake
-  }
-  delay(160);
-  ledcWrite(CH_ServoC, servoIniC);
-  delay(240);
-}
-
-//Core0
-void disp(void *pvParameters) {
-  Wire1.begin(0, 15); //SDA,SCL
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-
-  // Clear the buffer
-  display.clearDisplay();
-  
-  for (;;){
-    disableCore0WDT();
-    
-    display.setTextSize(1);             // Normal 1:1 pixel scale
-    display.setTextColor(SSD1306_WHITE);        // Draw white text
-    
-    display.setCursor(0,0);            
-    display.println(kalAngleL + AjL, 1);
-    display.setCursor(50,0);            
-    display.println(kalAngleC + AjC, 1);
-    display.setCursor(90,0);            
-    display.println(kalAngleR + AjR, 1);
-    
-    display.setCursor(0,9);  
-    if(Mode){
-      display.println("Point inverted");          
-    }else{
-      display.println("Side inverted");
-    }
-
-    int LineC = map(kalAngleC + AjC, 20, -20, 0, 127);
-    if(LineC >= 0 && LineC < 128){
-      if(abs(kalAngleC) <= 1.0){
-        display.fillRect(LineC-2, 16, 5, display.height()-1, SSD1306_WHITE); //(左上x, 左上y, 幅, 高さ, 線の色
-      }else{
-        display.drawLine(LineC, 16, LineC, display.height()-1, SSD1306_WHITE); //始点x, 始点y, 終点x, 終点y, 線の色
-      }
-    }
-    
-    int LineL = map(kalAngleL + AjL, 45+8, 45-8, 16, 63);
-    if(LineL >= 16 && LineL < 64){
-      if(abs(kalAngleL2) <= 1.0){
-        display.fillRect(0, LineL - 2 , display.width()/2-1, 5, SSD1306_WHITE); 
-      }else{
-        display.drawLine(0, LineL, display.width()/2-1, LineL, SSD1306_WHITE);
-      }
-    }
-    
-    int LineR = map(kalAngleR + AjR, 45+8, 45-8, 16, 63);
-    if(LineR >= 16 && LineR < 64){
-      if(abs(kalAngleR2) <= 1.0){
-        display.fillRect(display.width()/2, LineR - 2, display.width()-1, 5, SSD1306_WHITE); //(左上x, 左上y, 幅, 高さ, 線の色
-      }else{
-        display.drawLine(display.width()/2, LineR, display.width()-1, LineR, SSD1306_WHITE);
-      }
-    }
-      
-    display.display(); 
-    if(Lok != 9 && Rok != 9) delay(30);
-    display.clearDisplay();
-
-    
-    //起き上がりX
-    if(GetUpX == 1){
-      digitalWrite(brakeL, HIGH);
-      digitalWrite(brakeR, HIGH);
-      
-      //回転方向
-      digitalWrite(rote_pinL, HIGH);
-      digitalWrite(rote_pinR, LOW);
-      
-    
-      for(int i = 1023; i >= rotMaxLR; i--){
-        ledcWrite(CH_L, i);
-        ledcWrite(CH_R, i);
-        delay(5);
-      }
-      ledcWrite(CH_L, rotMaxLR);
-      ledcWrite(CH_R, rotMaxLR);
-      delay(300);
-    
-      ledcWrite(CH_L, 1023);
-      ledcWrite(CH_R, 1023);
-      ledcWrite(CH_ServoL, servoIniL + servoBrakeLR); //servo brake
-      ledcWrite(CH_ServoR, servoIniR - servoBrakeLR);
-      delay(160);
-      ledcWrite(CH_ServoL, servoIniL);
-      ledcWrite(CH_ServoR, servoIniR);
-
-      Lok = 9;
-      Rok = 9;
-      
-      Mode = 1;
-      GetUpX = 0;
-    }
-
-    //起き上がりX軸角度計測
-    if((Lok == 9 || Rok == 9) && dt < 1.0){
-      if(kalAngleL2 > getUpDeg || kalAngleR2 > getUpDeg){
-        Lok = 2;
-        Rok = 2;
-      }
-    }
-  }
-}
 
 void setup() {
   Wire.begin();
@@ -666,119 +458,5 @@ void loop() {
     delay(loopDelay);
   }else{
     delay(1);
-  }
-}
-
-
-void ENCL_READ() {
-  byte cur = (!digitalRead(ENCL_B) << 1) + !digitalRead(ENCL_A);
-  byte old = posL & B00000011;
-  byte dir = (posL & B00110000) >> 4;
- 
-  if (cur == 3) cur = 2;
-  else if (cur == 2) cur = 3;
- 
-  if (cur != old) //チャタリング防止
-  {
-    if (dir == 0) //回転開始と終了、方向を示す判定
-    {
-      if (cur == 1 || cur == 3) dir = cur;
-    } 
-    else {
-      if (cur == 0)
-      {
-        if (dir == 1 && old == 3) enc_countL--;
-        else if (dir == 3 && old == 1) enc_countL++;
-        dir = 0;
-      }
-    }
- 
-    bool rote = 0; //回転方向
-    if (cur == 3 && old == 0) rote = 0;
-    else if (cur == 0 && old == 3) rote = 1;
-    else if (cur > old) rote = 1;
- 
-    posL = (dir << 4) + (old << 2) + cur;
-  }
-}
-
-void ENCR_READ() {
-  byte cur = (!digitalRead(ENCR_B) << 1) + !digitalRead(ENCR_A);
-  byte old = posR & B00000011;
-  byte dir = (posR & B00110000) >> 4;
- 
-  if (cur == 3) cur = 2;
-  else if (cur == 2) cur = 3;
- 
-  if (cur != old)
-  {
-    if (dir == 0)
-    {
-      if (cur == 1 || cur == 3) dir = cur;
-    } 
-    else {
-      if (cur == 0)
-      {
-        if (dir == 1 && old == 3) enc_countR--;
-        else if (dir == 3 && old == 1) enc_countR++;
-        dir = 0;
-      }
-    }
- 
-    bool rote = 0;
-    if (cur == 3 && old == 0) rote = 0;
-    else if (cur == 0 && old == 3) rote = 1;
-    else if (cur > old) rote = 1;
- 
-    posR = (dir << 4) + (old << 2) + cur;
-  }
-}
-
-void ENCC_READ() {
-  byte cur = (!digitalRead(ENCC_B) << 1) + !digitalRead(ENCC_A);
-  byte old = posC & B00000011;
-  byte dir = (posC & B00110000) >> 4;
- 
-  if (cur == 3) cur = 2;
-  else if (cur == 2) cur = 3;
- 
-  if (cur != old)
-  {
-    if (dir == 0)
-    {
-      if (cur == 1 || cur == 3) dir = cur;
-    } 
-    else {
-      if (cur == 0)
-      {
-        if (dir == 1 && old == 3) enc_countC--;
-        else if (dir == 3 && old == 1) enc_countC++;
-        dir = 0;
-      }
-    }
- 
-    bool rote = 0;
-    if (cur == 3 && old == 0) rote = 0;
-    else if (cur == 0 && old == 3) rote = 1;
-    else if (cur > old) rote = 1;
- 
-    posC = (dir << 4) + (old << 2) + cur;
-  }
-}
-
-void GetUp() {
-  Serial.println("GetUp!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-  GetUpBtState = 1;
-}
-
-void ModeOnOff() {
-  Serial.println("ModeOnOff!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-  Lok = 0;
-  Rok = 0;
-  Cok = 0;
-  if(Mode){
-    Mode = 0;
-  }else{
-    Mode = 1;
   }
 }
