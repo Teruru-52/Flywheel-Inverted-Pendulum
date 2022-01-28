@@ -11,15 +11,14 @@
 
 // typedef struct{
 //     byte pos;
+//     int pin;
 // }Encoder_Typedef;
 
 // void enc_read(Encoder_Typedef *encoder);
 // void get_wheel_vel(Encoder_Typedef *encoder);
 
 void SetUpEncoder();
-void ENCL_READ();
-void ENCR_READ();
-void ENCC_READ();
+void EncRead(Encoder_Typedef *encoder);
 void GetWheelVel(Encoder_Typedef *encoder, Encoder_Typedef *encoder, Encoder_Typedef *encoder);
 
 #endif // _ENCODER_H_

@@ -115,22 +115,7 @@ void loop() {
   omegaZ = theta_Ydot * sin(theta_X * PI / 180.0) / cos(theta_Y * PI / 180.0) + theta_Zdot * cos(theta_X * PI / 180.0) / cos(theta_Y * PI / 180.0);
 
   digitalWrite(brakeC, HIGH);
-  MtC = KpC * (kalAngleC + AjC) / 90.0 + KdC * (kalAngleDotC + AjC2) / 500.0 + KwC * theta_YdotWheel / 10000.0;
-  MtC = max(-1.0f, min(1.0f, MtC));
-  pwmDutyC = 1023 * (1.0 - fabs(MtC)) - 43.0;
-  //pwmDutyC = 980;
-  if (kalAngleC >= 0.0 && kalAngleC <= 5.0) {
-    digitalWrite(rote_pinC, HIGH);
-    ledcWrite(CH_C, pwmDutyC);
-  }
-  else if (kalAngleC < 0.0 && kalAngleC >= -5.0){
-    digitalWrite(rote_pinC, LOW);
-    ledcWrite(CH_C, pwmDutyC);
-  }
-  else{
-    digitalWrite(rote_pinC, HIGH);
-    ledcWrite(CH_C, 1023);
-  }
+  Control();
 
   // Serial.print(", loopTime: ");
   // Serial.print((float)loopTime / 1000.0);

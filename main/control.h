@@ -29,5 +29,6 @@
 void SetUpWheel();
 void disp();
 void getupY();
+void Control();
 
 #endif // _CONTROL_H_

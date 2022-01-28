@@ -181,3 +181,22 @@ void getupY(){
   ledcWrite(CH_ServoC, servoIniC);
   delay(240);
 }
+
+void Control(){
+  MtC = KpC * (kalAngleC + AjC) / 90.0 + KdC * (kalAngleDotC + AjC2) / 500.0 + KwC * theta_YdotWheel / 10000.0;
+  MtC = max(-1.0f, min(1.0f, MtC));
+  pwmDutyC = 1023 * (1.0 - fabs(MtC)) - 43.0;
+  //pwmDutyC = 980;
+  if (kalAngleC >= 0.0 && kalAngleC <= 5.0) {
+    digitalWrite(rote_pinC, HIGH);
+    ledcWrite(CH_C, pwmDutyC);
+  }
+  else if (kalAngleC < 0.0 && kalAngleC >= -5.0){
+    digitalWrite(rote_pinC, LOW);
+    ledcWrite(CH_C, pwmDutyC);
+  }
+  else{
+    digitalWrite(rote_pinC, HIGH);
+    ledcWrite(CH_C, 1023);
+  }
+}

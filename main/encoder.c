@@ -16,7 +16,7 @@ void SetUpEncoder(){
   attachInterrupt(ENCC_B, ENCC_READ, CHANGE);
 }
 
-void ENCL_READ() {
+void EncRead(Encoder_Typedef *encoder) {
   byte cur = (!digitalRead(ENCL_B) << 1) + !digitalRead(ENCL_A);
   byte old = posL & B00000011;
   byte dir = (posL & B00110000) >> 4;
