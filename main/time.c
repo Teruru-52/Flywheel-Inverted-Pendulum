@@ -1,7 +1,7 @@
 #include "time.h"
 
 static unsigned long nowTime, oldTime;
-extern float dt;
+float dt;
 
 void GetSamplingTime()
 {

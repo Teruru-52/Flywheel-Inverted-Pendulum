@@ -9,16 +9,14 @@
 #define ENCC_A 35
 #define ENCC_B 34
 
-// typedef struct{
-//     byte pos;
-//     int pin;
-// }Encoder_Typedef;
-
-// void enc_read(Encoder_Typedef *encoder);
-// void get_wheel_vel(Encoder_Typedef *encoder);
+typedef struct{
+    byte pos;
+    int phaseA, phaseB, enc_count;
+    float wheel_vel;
+}Encoder_Typedef;
 
 void SetUpEncoder();
-void EncRead(Encoder_Typedef *encoder);
-void GetWheelVel(Encoder_Typedef *encoder, Encoder_Typedef *encoder, Encoder_Typedef *encoder);
+void EncoderRead(Encoder_Typedef *encoder);
+void GetWheelVel(Encoder_Typedef *encoder_l, Encoder_Typedef *encoder_r, Encoder_Typedef *encoder_c, float ts);
 
 #endif // _ENCODER_H_

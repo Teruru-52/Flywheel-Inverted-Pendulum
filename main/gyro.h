@@ -2,8 +2,12 @@
 #define _GYRO_H_
 #include "main.h"
 
-void offset_cal();
-void get_theta();
-void get_gyro_data();
+void GyroInit();
+void OffsetCalc();
+void GetRawAngle();
+void GetRawGyro();
+void KalmanInit();
+void GetEstAngle();
+void GetEstGyro();
 
 #endif  // _GYRO_H_

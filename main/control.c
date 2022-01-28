@@ -1,25 +1,15 @@
 #include "control.h"
 
-void SetUpWheel()
-{
-    pinMode(brakeL, OUTPUT);
-    pinMode(brakeR, OUTPUT);
-    pinMode(brakeC, OUTPUT);
-    pinMode(rote_pinL, OUTPUT);
-    pinMode(rote_pinR, OUTPUT);
-    pinMode(rote_pinC, OUTPUT);
+// ゲインは後でマクロ定義してもいい
+static float KC = 9.0, KC2 = 5.0, KLR = 12.0;
 
-    digitalWrite(brakeL, LOW);
-    digitalWrite(brakeR, LOW);
-    digitalWrite(brakeC, LOW);
-}
 // default
-/*float KpLR = 8.0;
-  float KdLR = 15.0;
-  float KwLR = 1.4;*/
-float KpLR = 8.0;
-float KdLR = 15.0;
-float KwLR = 1.4;
+static float KpLR = 8.0;
+static float KdLR = 15.0;
+static float KwLR = 1.4;
+static float KpLR = 8.0;
+static float KdLR = 15.0;
+static float KwLR = 1.4;
 
 //default
 /*float KpC = 12.0;
@@ -41,7 +31,20 @@ float KwC = 0.1;
 
 int rotMaxLR = 360, rotMaxCL = 70, rotMaxCR = 85;
 
-//Core0
+void SetUpWheel()
+{
+    pinMode(brakeL, OUTPUT);
+    pinMode(brakeR, OUTPUT);
+    pinMode(brakeC, OUTPUT);
+    pinMode(rote_pinL, OUTPUT);
+    pinMode(rote_pinR, OUTPUT);
+    pinMode(rote_pinC, OUTPUT);
+
+    digitalWrite(brakeL, LOW);
+    digitalWrite(brakeR, LOW);
+    digitalWrite(brakeC, LOW);
+}
+
 void disp(void *pvParameters) {
   Wire1.begin(0, 15); //SDA,SCL
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
@@ -99,87 +102,7 @@ void disp(void *pvParameters) {
     display.display(); 
     if(Lok != 9 && Rok != 9) delay(30);
     display.clearDisplay();
-
-    
-    //起き上がりX
-    if(GetUpX == 1){
-      digitalWrite(brakeL, HIGH);
-      digitalWrite(brakeR, HIGH);
-      
-      //回転方向
-      digitalWrite(rote_pinL, HIGH);
-      digitalWrite(rote_pinR, LOW);
-      
-    
-      for(int i = 1023; i >= rotMaxLR; i--){
-        ledcWrite(CH_L, i);
-        ledcWrite(CH_R, i);
-        delay(5);
-      }
-      ledcWrite(CH_L, rotMaxLR);
-      ledcWrite(CH_R, rotMaxLR);
-      delay(300);
-    
-      ledcWrite(CH_L, 1023);
-      ledcWrite(CH_R, 1023);
-      ledcWrite(CH_ServoL, servoIniL + servoBrakeLR); //servo brake
-      ledcWrite(CH_ServoR, servoIniR - servoBrakeLR);
-      delay(160);
-      ledcWrite(CH_ServoL, servoIniL);
-      ledcWrite(CH_ServoR, servoIniR);
-
-      Lok = 9;
-      Rok = 9;
-      
-      Mode = 1;
-      GetUpX = 0;
-    }
-
-    //起き上がりX軸角度計測
-    if((Lok == 9 || Rok == 9) && dt < 1.0){
-      if(kalAngleL2 > getUpDeg || kalAngleR2 > getUpDeg){
-        Lok = 2;
-        Rok = 2;
-      }
-    }
   }
-}
-
-//起き上がりY
-void getupY(){
-  digitalWrite(brakeC, HIGH);
-  int rotMax;
-  GetUpY = 1;
-  
-  //回転方向
-  if(kalAngleC < 0.0){
-    rotMax = rotMaxCR;
-    digitalWrite(rote_pinC, HIGH);
-    getUpDeg = -5.0;
-    Cok = 8;
-  }else{
-    rotMax = rotMaxCL;
-    digitalWrite(rote_pinC, LOW);
-    getUpDeg = 5.0;
-    Cok = 9;
-  }
-
-  for(int i = 1023; i >= rotMax; i--){
-    ledcWrite(CH_C, i);
-    delay(5);
-  }
-  ledcWrite(CH_C, rotMax);
-  delay(300);
-
-  ledcWrite(CH_C, 1023);
-  if(kalAngleC < 0.0){
-    ledcWrite(CH_ServoC, servoIniC + servoBrakeC); //servo brake
-  }else{
-    ledcWrite(CH_ServoC, servoIniC - servoBrakeC); //servo brake
-  }
-  delay(160);
-  ledcWrite(CH_ServoC, servoIniC);
-  delay(240);
 }
 
 void Control(){

@@ -1,5 +1,7 @@
 #include "encoder.h"
 
+Encoder_Typedef Enc_l, Enc_r, Enc_c;
+
 void SetUpEncoder(){
   pinMode(ENCL_A, INPUT);
   pinMode(ENCL_B, INPUT);
@@ -8,18 +10,28 @@ void SetUpEncoder(){
   pinMode(ENCC_A, INPUT);
   pinMode(ENCC_B, INPUT);
 
-  attachInterrupt(ENCL_A, ENCL_READ, CHANGE);
-  attachInterrupt(ENCL_B, ENCL_READ, CHANGE);
-  attachInterrupt(ENCR_A, ENCR_READ, CHANGE);
-  attachInterrupt(ENCR_B, ENCR_READ, CHANGE);
-  attachInterrupt(ENCC_A, ENCC_READ, CHANGE);
-  attachInterrupt(ENCC_B, ENCC_READ, CHANGE);
+  attachInterrupt(ENCL_A, EncoderRead(&Enc_l), CHANGE);
+  attachInterrupt(ENCL_B, EncoderRead(&Enc_l), CHANGE);
+  attachInterrupt(ENCR_A, EncoderRead(&Enc_r), CHANGE);
+  attachInterrupt(ENCR_B, EncoderRead(&Enc_r), CHANGE);
+  attachInterrupt(ENCC_A, EncoderRead(&Enc_c), CHANGE);
+  attachInterrupt(ENCC_B, EncoderRead(&Enc_c), CHANGE);
+
+  Enc_l.enc_count = 0;
+  Enc_r.enc_count = 0;
+  Enc_c.enc_count = 0;
+  Enc_l.phaseA = ENCL_A;
+  Enc_l.phaseB = ENCL_B;
+  Enc_r.phaseA = ENCR_A;
+  Enc_r.phaseB = ENCR_B;
+  Enc_c.phaseA = ENCC_A;
+  Enc_c.phaseB = ENCC_B;
 }
 
-void EncRead(Encoder_Typedef *encoder) {
-  byte cur = (!digitalRead(ENCL_B) << 1) + !digitalRead(ENCL_A);
-  byte old = posL & B00000011;
-  byte dir = (posL & B00110000) >> 4;
+void EncoderRead(Encoder_Typedef *encoder)Encoder_Typedef *encoder) {
+  byte cur = (!digitalRead(encoder->phaseB) << 1) + !digitalRead(encoder->phaseA);
+  byte old = encoder->pos & B00000011;
+  byte dir = (encoder->pos & B00110000) >> 4;
  
   if (cur == 3) cur = 2;
   else if (cur == 2) cur = 3;
@@ -33,8 +45,8 @@ void EncRead(Encoder_Typedef *encoder) {
     else {
       if (cur == 0)
       {
-        if (dir == 1 && old == 3) enc_countL--;
-        else if (dir == 3 && old == 1) enc_countL++;
+        if (dir == 1 && old == 3) encoder->enc_count--;
+        else if (dir == 3 && old == 1) encoder->enc_count++;
         dir = 0;
       }
     }
@@ -44,79 +56,15 @@ void EncRead(Encoder_Typedef *encoder) {
     else if (cur == 0 && old == 3) rote = 1;
     else if (cur > old) rote = 1;
  
-    posL = (dir << 4) + (old << 2) + cur;
+    encoder->pos = (dir << 4) + (old << 2) + cur;
   }
 }
 
-void ENCR_READ() {
-  byte cur = (!digitalRead(ENCR_B) << 1) + !digitalRead(ENCR_A);
-  byte old = posR & B00000011;
-  byte dir = (posR & B00110000) >> 4;
- 
-  if (cur == 3) cur = 2;
-  else if (cur == 2) cur = 3;
- 
-  if (cur != old)
-  {
-    if (dir == 0)
-    {
-      if (cur == 1 || cur == 3) dir = cur;
-    } 
-    else {
-      if (cur == 0)
-      {
-        if (dir == 1 && old == 3) enc_countR--;
-        else if (dir == 3 && old == 1) enc_countR++;
-        dir = 0;
-      }
-    }
- 
-    bool rote = 0;
-    if (cur == 3 && old == 0) rote = 0;
-    else if (cur == 0 && old == 3) rote = 1;
-    else if (cur > old) rote = 1;
- 
-    posR = (dir << 4) + (old << 2) + cur;
-  }
-}
-
-void ENCC_READ() {
-  byte cur = (!digitalRead(ENCC_B) << 1) + !digitalRead(ENCC_A);
-  byte old = posC & B00000011;
-  byte dir = (posC & B00110000) >> 4;
- 
-  if (cur == 3) cur = 2;
-  else if (cur == 2) cur = 3;
- 
-  if (cur != old)
-  {
-    if (dir == 0)
-    {
-      if (cur == 1 || cur == 3) dir = cur;
-    } 
-    else {
-      if (cur == 0)
-      {
-        if (dir == 1 && old == 3) enc_countC--;
-        else if (dir == 3 && old == 1) enc_countC++;
-        dir = 0;
-      }
-    }
- 
-    bool rote = 0;
-    if (cur == 3 && old == 0) rote = 0;
-    else if (cur == 0 && old == 3) rote = 1;
-    else if (cur > old) rote = 1;
- 
-    posC = (dir << 4) + (old << 2) + cur;
-  }
-}
-
-void GetWheelVel(Encoder_typedef *encoder, Encoder_typedef *encoder, Encoder_typedef *encoder){
-  float theta_LdotWheel = -1.0 * float(enc_countL) * 3.6 / dt; //2×180°/100=3.6
-  enc_countL = 0;
-  float theta_RdotWheel = 1.0 * float(enc_countR) * 3.6 / dt;
-  enc_countR = 0;
-  float theta_YdotWheel = -1.0 * float(enc_countC) * 3.6 / dt;
-  enc_countC = 0;
+void GetWheelVel(Encoder_typedef *encoder_l, Encoder_typedef *encoder_r, Encoder_typedef *encoder_c, float ts){
+  encoder_l->wheel_vel = -1.0 * float(encoder_l->enc_count) * 3.6 / ts; //2×180°/100=3.6
+  encoder_l->enc_count = 0;
+  encoder_r->wheel_vel = -1.0 * float(encoder_r->enc_count) * 3.6 / ts;
+  encoder_r->enc_count = 0;
+  encoder_c->wheel_vel = -1.0 * float(encoder_c->enc_count) * 3.6 / ts; 
+  encoder_c->enc_count = 0;
 }
