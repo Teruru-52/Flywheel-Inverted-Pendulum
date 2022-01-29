@@ -2,21 +2,25 @@
 #define _CONTROL_H_
 #include "main.h"
 
-#define PWM_pinL 27
-#define brakeL 19
-#define rote_pinL 23
+#define CHANNEL_L 0
+#define CHANNEL_R 1
+#define CHANNEL_C 2
 
-#define PWM_pinR 25
-#define brakeR 17
-#define rote_pinR 16
+#define ROT_DIR_L 23
+#define ROT_DIR_R 16
+#define ROT_DIR_C 5
 
-#define PWM_pinC 26
-#define brakeC 18
-#define rote_pinC 5
+#define PWM_PIN_L 27
+#define PWM_PIN_R 25
+#define PWM_PIN_C 26
 
-#define CH_L 0
-#define CH_R 1
-#define CH_C 2
+#define BRAKE_L 19
+#define BRAKE_R 17
+#define BRAKE_C 18
+
+#define INPUT_LIMIT_L 360
+#define INPUT_LIMIT_R 360
+#define INPUT_LIMIT_C 360
 
 #define D_FILTER_COFF       0.025f //3.98Hz
 
@@ -27,8 +31,9 @@
 // }Control_Typedef;
 
 void SetUpWheel();
-void disp();
 void getupY();
-void Control();
+void ControlC();
+void ControlL();
+void ControlR();
 
 #endif // _CONTROL_H_

@@ -28,7 +28,7 @@ void SetUpEncoder(){
   Enc_c.phaseB = ENCC_B;
 }
 
-void EncoderRead(Encoder_Typedef *encoder)Encoder_Typedef *encoder) {
+void EncoderRead(Encoder_Typedef *encoder) {
   byte cur = (!digitalRead(encoder->phaseB) << 1) + !digitalRead(encoder->phaseA);
   byte old = encoder->pos & B00000011;
   byte dir = (encoder->pos & B00110000) >> 4;

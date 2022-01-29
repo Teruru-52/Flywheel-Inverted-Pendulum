@@ -17,6 +17,7 @@ float theta_Ldot = 0, theta_Rdot = 0, theta_Ydot = 0, theta_Zdot = 0;
 float kalAngleL, kalAngleL2, kalAngleR;
 float kalAngleR2, kalAngleDotL, kalAngleDotR, kalAngleC, kalAngleDotC;
 
+float AjC = 0.0, AjC2 = 0.0, AjL = 0.0, AjR = 0.0;
 
 void GyroInit(){
   // initialize device
@@ -121,4 +122,13 @@ void GetEstGyro(){
   kalAngleDotL = kalmanL.getRate();
   kalAngleDotR = kalmanR.getRate();
   kalAngleDotC = kalmanC.getRate();
+}
+
+void WheelBrake(){
+  if(fabs(kalAngleL2) > LIMIT_ANGLE)
+    digitalWrite(BRAKE_L, LOW);
+  if(fabs(kalAngleLC) > LIMIT_ANGLE)
+    digitalWrite(BRAKE_C, LOW);
+  if(fabs(kalAngleR2) > LIMIT_ANGLE)
+    digitalWrite(BRAKE_R, LOW);
 }

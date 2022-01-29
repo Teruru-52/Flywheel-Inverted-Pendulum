@@ -11,6 +11,8 @@
 
 struct Gyro_Typedef;
 
+void DispInit();
+void Disp();
 void DisplayData(Gyro_Typedef *gyro);
 
 #endif // _DISPLAY_H_
