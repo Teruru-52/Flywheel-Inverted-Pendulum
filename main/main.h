@@ -1,7 +1,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#include <Arduino.h>
 #include <Kalman.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>

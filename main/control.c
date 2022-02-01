@@ -25,8 +25,10 @@ static const float KwC = 0.1;
 
 static const float degL = 45, degR = 45;
 static float MtL, MtR, MtC;
-static int DutyIniL = 1020, DutyIniR = DutyIniL, DutyIniC = DutyIniL;
+static int DutyIniL = 1020, DutyIniR = 1020, DutyIniC = 1020;
 static int input_c, input_r, input_c;
+extern float kalAngleL, kalAngleL2, kalAngleR;
+extern float kalAngleR2, kalAngleDotL, kalAngleDotR, kalAngleC, kalAngleDotC;
 
 void SetUpWheel()
 {
@@ -80,4 +82,9 @@ void ControlR(){
   MtR = KpR * kalAngleR + KdR * kalAngleDotR + KwR * theta_YdotWheel;
   MtR = max(-1.0f, min(1.0f, MtR));
   input_r = 1023 * (1.0 - fabs(MtR)) - 43.0;
+}
+
+void TestControl(){
+  digitalWrite(ROT_DIR_C, HIGH);
+  ledcWrite(CHANNEL_C, 800);
 }

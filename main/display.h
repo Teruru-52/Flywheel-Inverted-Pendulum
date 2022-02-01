@@ -9,7 +9,7 @@
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 
-struct Gyro_Typedef;
+extern struct Gyro_Typedef;
 
 void DispInit();
 void Disp();

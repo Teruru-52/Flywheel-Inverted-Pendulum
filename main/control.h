@@ -35,5 +35,6 @@ void getupY();
 void ControlC();
 void ControlL();
 void ControlR();
+void TestControl();
 
 #endif // _CONTROL_H_

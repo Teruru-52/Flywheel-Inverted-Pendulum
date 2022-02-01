@@ -32,7 +32,7 @@ void setup() {
   attachInterrupt(MODE_PIN, ModeOnOff, FALLING);
 
   SetUpWheel();
-  SetUpEncoder();
+  // SetUpEncoder();
 
   GyroInit();
   OffsetCalc();
@@ -52,22 +52,19 @@ void loop() {
   GetEstAngle();
   GetEstGyro();
 
-  GetEulerVel(theta_Xdot, theta_Ydot, theta_Zdot);
-  GetEulerAngle(dt);
-
-  GetWheelVel(&Enc_l, &Enc_r, &Enc_c, dt);
+  // GetWheelVel(&Enc_l, &Enc_r, &Enc_c, dt);
   
   // side inverted
-  if (mode == 0)
-  {
-    ControlC();
-  }
+  // if (mode == 0)
+  // {
+  //   ControlC();
+  // }
   // point inverted
-  else
-  {
-    ControlC();
-    ControlL();
-    ControlR();
-  }
+  // else
+  // {
+  //   ControlC();
+  //   ControlL();
+  //   ControlR();
+  // }
   WheelBrake();
 }

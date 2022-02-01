@@ -1,6 +1,8 @@
 #include "display.h"
+#include "my_header.h"
 
-extern float kalAngleL, kalAngleR, kalAngleC;
+float kalAngleL, kalAngleL2, kalAngleR;
+float kalAngleR2, kalAngleDotL, kalAngleDotR, kalAngleC, kalAngleDotC;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, OLED_RESET);
 
@@ -29,11 +31,11 @@ void Disp(void *pvParameters) {
     display.setTextColor(SSD1306_WHITE);        // Draw white text
     
     display.setCursor(0,0);            
-    display.println(kalAngleL + AjL, 1);
+    display.println(kalAngleL, 1);
     display.setCursor(50,0);            
-    display.println(kalAngleC + AjC, 1);
+    display.println(kalAngleC, 1);
     display.setCursor(90,0);            
-    display.println(kalAngleR + AjR, 1);
+    display.println(kalAngleR, 1);
     
     display.setCursor(0,9);  
     if(Mode){

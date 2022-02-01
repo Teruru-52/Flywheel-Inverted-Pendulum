@@ -14,8 +14,8 @@ static float gyroXoffset = 0, gyroYoffset = 0, gyroZoffset = 0;
 
 float theta_X = 0, theta_Y = 0, theta_L = 0, theta_R = 0;
 float theta_Ldot = 0, theta_Rdot = 0, theta_Ydot = 0, theta_Zdot = 0;
-float kalAngleL, kalAngleL2, kalAngleR;
-float kalAngleR2, kalAngleDotL, kalAngleDotR, kalAngleC, kalAngleDotC;
+extern float kalAngleL, kalAngleL2, kalAngleR;
+extern float kalAngleR2, kalAngleDotL, kalAngleDotR, kalAngleC, kalAngleDotC;
 
 float AjC = 0.0, AjC2 = 0.0, AjL = 0.0, AjR = 0.0;
 

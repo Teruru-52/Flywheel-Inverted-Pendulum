@@ -4,6 +4,10 @@
 
 #define LIMIT_ANGLE 20
 
+typedef struct{
+  float axis_x, axis_y, axis_z;
+}Gyro_Typedef;
+
 void GyroInit();
 void OffsetCalc();
 void GetRawAngle();
