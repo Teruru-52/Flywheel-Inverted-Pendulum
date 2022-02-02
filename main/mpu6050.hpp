@@ -32,11 +32,12 @@ THE SOFTWARE.
 ===============================================
 */
 
-#ifndef _MPU6050_H_
-#define _MPU6050_H_
+#ifndef _MPU6050_HPP_
+#define _MPU6050_HPP_
 
-#include "I2Cdev.h"
-#include "helper_3dmath.h"
+#include "I2Cdev.hpp"
+#include "main.hpp"
+//#include "helper_3dmath.h"
 
 // supporting link:  http://forum.arduino.cc/index.php?&topic=143444.msg1079517#msg1079517
 // also: http://forum.arduino.cc/index.php?&topic=141571.msg1062899#msg1062899s
@@ -842,4 +843,4 @@ class MPU6050_Base {
 typedef MPU6050_Base MPU6050;
 #endif
 
-#endif /* _MPU6050_H_ */
+#endif /* _MPU6050_HPP_ */

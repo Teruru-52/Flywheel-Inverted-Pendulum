@@ -33,7 +33,7 @@ THE SOFTWARE.
 ===============================================
 */
 
-#include "mpu6050.h"
+#include "mpu6050.hpp"
 
 /** Specific address constructor.
  * @param address I2C address, uses default I2C address if none is specified

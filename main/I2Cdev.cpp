@@ -43,7 +43,7 @@ THE SOFTWARE.
 ===============================================
 */
 
-#include "I2Cdev.h"
+#include "I2Cdev.hpp"
 
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE || I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_SBWIRE
 

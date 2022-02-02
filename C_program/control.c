@@ -29,6 +29,7 @@ static int DutyIniL = 1020, DutyIniR = 1020, DutyIniC = 1020;
 static int input_c, input_r, input_c;
 extern float kalAngleL, kalAngleL2, kalAngleR;
 extern float kalAngleR2, kalAngleDotL, kalAngleDotR, kalAngleC, kalAngleDotC;
+float theta_YdotWheel;
 
 void SetUpWheel()
 {

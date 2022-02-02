@@ -43,8 +43,10 @@ THE SOFTWARE.
 ===============================================
 */
 
-#ifndef _I2CDEV_H_
-#define _I2CDEV_H_
+#ifndef _I2CDEV_HPP_
+#define _I2CDEV_HPP_
+
+#include "main.hpp"
 
 // -----------------------------------------------------------------------------
 // Enable deprecated pgmspace typedefs in avr-libc
@@ -305,4 +307,4 @@ class I2Cdev {
 
 #endif // I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_NBWIRE
 
-#endif /* _I2CDEV_H_ */
+#endif /* _I2CDEV_HPP_ */

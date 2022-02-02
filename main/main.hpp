@@ -1,10 +1,9 @@
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __MAIN_HPP_
+#define __MAIN_HPP_
 
-#include <Kalman.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <math.h>
 
-#endif // __MAIN_H
+#endif // __MAIN_HPP_

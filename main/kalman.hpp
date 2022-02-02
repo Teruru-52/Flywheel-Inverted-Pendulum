@@ -15,8 +15,8 @@
  e-mail   :  kristianl@tkjelectronics.com
  */
 
-#ifndef _Kalman_h_
-#define _Kalman_h_
+#ifndef _KALMAN_HPP_
+#define _KALMAN_HPP_
 
 class Kalman {
 public:

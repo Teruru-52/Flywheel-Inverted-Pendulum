@@ -1,26 +1,19 @@
-#include "main.h"
-#include "my_header.h"
+#include "main.hpp"
+#include "wheel.hpp"
 
 #define GETUP_PIN 2
 #define MODE_PIN 12
 
-extern Encoder_Typedef Enc_l, Enc_r, Enc_c;
-
-extern float accX, accY, accZ;
-extern float gyroX, gyroY, gyroZ;
-
-extern float theta_X, theta_Y, theta_L, theta_R;
-extern float theta_Ldot, theta_Rdot, theta_Ydot, theta_Zdot;
-extern float kalAngleL, kalAngleL2, kalAngleR;
-extern float kalAngleR2, kalAngleDotL, kalAngleDotR, kalAngleC, kalAngleDotC;
-
-extern float dt;
+unsigned long nowTime, oldTime;
+float dt;
 
 int mode = 0;
 int state = 0;
 
 float omegaZ = 0.0;
-//----------------------------
+
+WheelsCotroller controller(2.5, 3.0, 0.1, 8.0, 15.0, 1.4, 8.0, 15.0, 1.4);
+// Kpc, Kdc, Kwc, Kpl, Kdl, Kwl, Kpr, Kdr, Kwr
 
 void setup() {
   Wire.begin();
@@ -46,6 +39,10 @@ void setup() {
 
 
 void loop() {
+  nowTime = micros();
+  dt = (float)(nowTime - oldTime) / 1000000.0; // sec
+  oldTime = nowTime;
+
   GetSamplingTime();
   GetRawAngle();
   GetRawGyro();
@@ -57,14 +54,12 @@ void loop() {
   // side inverted
   // if (mode == 0)
   // {
-  //   ControlC();
+  //   controller.Control_1d();
   // }
   // point inverted
   // else
   // {
-  //   ControlC();
-  //   ControlL();
-  //   ControlR();
+  //   controller.Control_3d();
   // }
   WheelBrake();
 }
