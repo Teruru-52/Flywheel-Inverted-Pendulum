@@ -1,7 +1,5 @@
 #include "gyro.hpp"
 
-extern float dt;
-
 void Gyro::GyroInit()
 {
     // initialize device
@@ -66,8 +64,8 @@ void Gyro::GetRawAngle()
     accY = ay / 16384.0;
     accZ = az / 16384.0;
 
-    theta_x = atan2(-1.0 * (accY - accYoffset), (accZ - accZoffset)) * 180.0 / PI;
-    theta_y = atan2(-1.0 * (accX - accXoffset), (accZ - accZoffset)) * 180.0 / PI;
+    theta_x = atan2(-1.0 * (accY - accYoffset), (accZ - accZoffset)); // [rad]
+    theta_y = atan2(-1.0 * (accX - accXoffset), (accZ - accZoffset));
 }
 
 void Gyro::GetRawGyro()
@@ -77,8 +75,8 @@ void Gyro::GetRawGyro()
     gyroY = gy / 131.072;
     gyroZ = gz / 131.072;
 
-    dot_theta_x = gyroZ - gyroZoffset;
-    dot_theta_y = gyroY - gyroYoffset;
+    dot_theta_x = (gyroZ - gyroZoffset) * M_PI / 180; // [rad/s]
+    dot_theta_y = (gyroY - gyroYoffset) * M_PI / 180;
 }
 
 void Gyro::KalmanInit()
@@ -90,7 +88,7 @@ void Gyro::KalmanInit()
   kalmanY.setAngle(theta_y);
 }
 
-float Gyro::GetEstAngle()
+float Gyro::GetEstAngle(float dt)
 {
   theta_x_est = kalmanX.getAngle(theta_x, dot_theta_x, dt);
   theta_y_est = kalmanY.getAngle(theta_y, dot_theta_y, dt);

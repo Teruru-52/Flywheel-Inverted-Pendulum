@@ -20,10 +20,6 @@
 #define BRAKE_R 17
 #define BRAKE_C 18
 
-#define INPUT_LIMIT_L 360
-#define INPUT_LIMIT_R 360
-#define INPUT_LIMIT_C 360
-
 class Wheels
 {
 private:
@@ -31,16 +27,16 @@ private:
     Encoder enc_r;
     Encoder enc_c;
 
-    const float angle_limit = 20; //deg
-    float wheel_vel;
+    const float angle_limit = 5.0; //deg
+    float wheel_vel_l, wheel_vel_r, wheel_vel_c;
 
 public:
     Wheels();
 
     void SetUpWheel();
     void SetUpEncoder();
-    float GetWheelVel();
-    void WheelBrake();
+    float GetWheelVel(float dt);
+    void WheelBrake(float theta);
 };
 
 class WheelsController
@@ -50,15 +46,14 @@ private:
     float Kpc, Kdc, Kwc;
     float Kpl, Kdl, Kwl;
     float Kpr, Kdr, Kwr;
-    const float input_limit = 200;
-    float MtL, MtR, MtC;
-    int DutyIniL = 1020, DutyIniR = 1020, DutyIniC = 1020;
+    const int input_limit = 500;
+    const int input_offset = 43;
     int input_l, input_r, input_c;
 
 public:
     WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr);
 
-    void Control_1d();
+    void Control_1d(float theta, float dot_theta, float omega);
     void Control_3d();
     void TestControl();
 };

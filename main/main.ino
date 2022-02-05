@@ -14,7 +14,7 @@ int state = 0;
 
 Gyro gyro;
 Wheels wheels;
-WheelsController controller(2.5, 3.0, 0.1, 8.0, 15.0, 1.4, 8.0, 15.0, 1.4);
+WheelsController controller(1.0, 0.0, 0.0, 8.0, 15.0, 1.4, 8.0, 15.0, 1.4);
 // Kpc, Kdc, Kwc, Kpl, Kdl, Kwl, Kpr, Kdr, Kwr
 
 void setup() {
@@ -32,7 +32,7 @@ void setup() {
   gyro.OffsetCalc();
   gyro.KalmanInit();
 
-  DispInit();
+  // DispInit();
 }
 
 
@@ -43,16 +43,14 @@ void loop() {
 
   gyro.GetRawAngle();
   gyro.GetRawGyro();
-  float y = gyro.GetEstAngle();
+  float y = gyro.GetEstAngle(dt);
   float dot_y = gyro.GetEstGyro();
-  float omega = wheels.GetWheelVel();
+  float omega = wheels.GetWheelVel(dt);
 
-  // controller.Control_1d(y, dot_y, omega);
+  controller.Control_1d(y, dot_y, omega);
   Serial.print(y);
   Serial.print(",");
-  Serial.print(dt);
-
-  // GetWheelVel(&Enc_l, &Enc_r, &Enc_c, dt);
+  Serial.println(dt);
   
   // side inverted
   // if (mode == 0)
@@ -65,5 +63,5 @@ void loop() {
   //   controller.Control_3d(dt);
   // }
   
-  wheels.WheelBrake();
+  wheels.WheelBrake(y);
 }

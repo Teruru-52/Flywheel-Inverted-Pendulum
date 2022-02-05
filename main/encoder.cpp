@@ -3,10 +3,10 @@
 Encoder::Encoder(int enc_a, int enc_b)
     : enc_a(enc_a),
       enc_b(enc_b),
-      pos = 0,
-      count = 0 {}
+      count(0) {}
 
-void Encoder::EncoderRead() {
+void Encoder::EncoderRead()
+{
   byte cur = (!digitalRead(enc_b) << 1) + !digitalRead(enc_a);
   byte old = pos & B00000011;
   byte dir = (pos & B00110000) >> 4;
@@ -23,8 +23,8 @@ void Encoder::EncoderRead() {
     else {
       if (cur == 0)
       {
-        if (dir == 1 && old == 3) enc_count--;
-        else if (dir == 3 && old == 1) enc_count++;
+        if (dir == 1 && old == 3) count--;
+        else if (dir == 3 && old == 1) count++;
         dir = 0;
       }
     }

@@ -12,11 +12,13 @@
 class Encoder
 {
 private:
-    float pos, count;
     int enc_a, enc_b;
 
 public:
     Encoder(int enc_a, int enc_b);
+
+    byte pos;
+    int count;
 
     void EncoderRead();
 };

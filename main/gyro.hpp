@@ -27,7 +27,7 @@ public:
     void GetRawAngle();
     void GetRawGyro();
     void KalmanInit();
-    float GetEstAngle();
+    float GetEstAngle(float dt);
     float GetEstGyro();
 };
 

@@ -1,7 +1,5 @@
 #include "wheel.hpp"
 
-extern float dt;
-
 Wheels::Wheels()
     : enc_l(ENCL_A, ENCL_B),
       enc_r(ENCR_A, ENCR_B),
@@ -30,7 +28,8 @@ void Wheels::SetUpWheel()
   ledcAttachPin(PWM_PIN_C, CHANNEL_C);
 }
 
-void Wheels::SetUpEncoder(){
+void Wheels::SetUpEncoder()
+{
   pinMode(ENCL_A, INPUT);
   pinMode(ENCL_B, INPUT);
   pinMode(ENCR_A, INPUT);
@@ -38,34 +37,40 @@ void Wheels::SetUpEncoder(){
   pinMode(ENCC_A, INPUT);
   pinMode(ENCC_B, INPUT);
 
-  attachInterrupt(ENCL_A, enc_l.EncoderRead(), CHANGE);
-  attachInterrupt(ENCL_B, enc_l.EncoderRead(), CHANGE);
-  attachInterrupt(ENCR_A, enc_r.EncoderRead(), CHANGE);
-  attachInterrupt(ENCR_B, enc_r.EncoderRead(), CHANGE);
-  attachInterrupt(ENCC_A, enc_c.EncoderRead(), CHANGE);
-  attachInterrupt(ENCC_B, enc_c.EncoderRead(), CHANGE);
+  attachInterrupt(ENCL_A, enc_l.EncoderRead, CHANGE);
+  attachInterrupt(ENCL_B, enc_l.EncoderRead, CHANGE);
+  attachInterrupt(ENCR_A, enc_r.EncoderRead, CHANGE);
+  attachInterrupt(ENCR_B, enc_r.EncoderRead, CHANGE);
+  attachInterrupt(ENCC_A, enc_c.EncoderRead, CHANGE);
+  attachInterrupt(ENCC_B, enc_c.EncoderRead, CHANGE);
 }
 
-float Wheels::GetWheelVel(){
-  enc_l.wheel_vel = -1.0 * float(enc_l.count) * 3.6 / dt; //2×180°/100=3.6
+float Wheels::GetWheelVel(float dt)
+{
+  wheel_vel_l = -1.0 * float(enc_l.count) * M_PI / 50.0 / dt; // 2×π/100=0.0628 [rad]
   enc_l.count = 0;
-  enc_r.wheel_vel = -1.0 * float(enc_r.count) * 3.6 / dt;
+  wheel_vel_r = -1.0 * float(enc_r.count) * M_PI / 50.0 / dt;
   enc_r.count = 0;
-  enc_c.wheel_vel = -1.0 * float(enc_c.count) * 3.6 / dt;
+  wheel_vel_c = -1.0 * float(enc_c.count) * M_PI / 50.0 / dt;
   enc_c.count = 0;
 
-  return enc_c.wheel_vel;
+  return wheel_vel_c;
 }
 
-void Wheels::WheelBrake(){
+void Wheels::WheelBrake(float theta)
+{
   // if(fabs(theta_x_est) > angle_limit)
   //   digitalWrite(BRAKE_L, LOW);
   //   digitalWrite(BRAKE_R, LOW);
-  if(fabs(theta_y_est) > angle_limit)
+  if (fabs(theta) > angle_limit)
+  {
     digitalWrite(BRAKE_C, LOW);
+    digitalWrite(BRAKE_L, LOW);
+    digitalWrite(BRAKE_R, LOW);
+  }
 }
 
-void WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr)
+WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr)
     : Kpc(Kpc),
       Kdc(Kdc),
       Kwc(Kwc),
@@ -76,20 +81,29 @@ void WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float K
       Kdr(Kdr),
       Kwr(Kwr) {}
 
-void WheelsController::Control_1d(){
-  MtC = KpC * kalAngleC  + KdC * kalAngleDotC + KwC * theta_YdotWheel;
-  MtC = max(-1.0f, min(1.0f, MtC));
-  input_c = 1023 * (1.0 - fabs(MtC)) - 43.0;
-  //input_c = 980;
-  if (kalAngleC >= 0.0 && kalAngleC <= 5.0) {
+void WheelsController::Control_1d(float theta, float dot_theta, float omega)
+{
+  input_c = Kpc * theta + Kdc * dot_theta + Kwc * omega;
+
+  if (input_c > input_limit)
+    input_c = input_limit;
+  if (input_c < -input_limit)
+    input_c = -input_limit;
+
+  if (input_c > 0)
+  {
+    input_c = 1023 - input_offset - input_c; 
     digitalWrite(ROT_DIR_C, HIGH);
     ledcWrite(CHANNEL_C, input_c);
   }
-  else if (kalAngleC < 0.0 && kalAngleC >= -5.0){
+  else if (input_c < 0)
+  {
+    input_c = 1023 - input_offset + input_c;
     digitalWrite(ROT_DIR_C, LOW);
     ledcWrite(CHANNEL_C, input_c);
   }
-  else{
+  else // input_c == 0
+  {
     digitalWrite(ROT_DIR_C, HIGH);
     ledcWrite(CHANNEL_C, 1023);
   }
