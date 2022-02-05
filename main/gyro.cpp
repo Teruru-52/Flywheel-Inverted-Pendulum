@@ -1,5 +1,7 @@
 #include "gyro.hpp"
 
+extern float dt;
+
 void Gyro::GyroInit()
 {
     // initialize device
@@ -82,20 +84,24 @@ void Gyro::GetRawGyro()
 void Gyro::KalmanInit()
 {
   // get theta
-  GetAngleRaw();
+//  GetAngleRaw();
   // set initial angle
   kalmanX.setAngle(theta_x);
   kalmanY.setAngle(theta_y);
 }
 
-void Gyro::GetEstAngle()
+float Gyro::GetEstAngle()
 {
   theta_x_est = kalmanX.getAngle(theta_x, dot_theta_x, dt);
   theta_y_est = kalmanY.getAngle(theta_y, dot_theta_y, dt);
+
+  return theta_y_est;
 }
 
-void Gyro::GetEstGyro()
+float Gyro::GetEstGyro()
 {
   dot_theta_x_est = kalmanX.getRate();
   dot_theta_y_est = kalmanY.getRate();
+
+  return dot_theta_y_est;
 }
