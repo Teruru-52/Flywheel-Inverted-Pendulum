@@ -1,6 +1,5 @@
 #ifndef _WHEEL_HPP_
 #define _WHEEL_HPP_
-#include "main.hpp"
 #include "encoder.hpp"
 #include "gyro.hpp"
 
@@ -26,17 +25,20 @@ private:
     Encoder enc_l;
     Encoder enc_r;
     Encoder enc_c;
-
-    const float angle_limit = 5.0; //deg
+    const float angle_limit = 20.0 * M_PI / 180; // [rad]
     float wheel_vel_l, wheel_vel_r, wheel_vel_c;
 
 public:
     Wheels();
 
     void SetUpWheel();
-    void SetUpEncoder();
+//    void SetUpEncoder();
+    void EncoderReadL();
+    void EncoderReadR();
+    void EncoderReadC();
     float GetWheelVel(float dt);
-    void WheelBrake(float theta);
+    void WheelBrakeOn(float theta);
+    void WheelBrakeOff();
 };
 
 class WheelsController
@@ -46,7 +48,7 @@ private:
     float Kpc, Kdc, Kwc;
     float Kpl, Kdl, Kwl;
     float Kpr, Kdr, Kwr;
-    const int input_limit = 500;
+    const int input_limit = 800;
     const int input_offset = 43;
     int input_l, input_r, input_c;
 

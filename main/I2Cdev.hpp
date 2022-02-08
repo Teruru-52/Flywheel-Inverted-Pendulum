@@ -46,8 +46,6 @@ THE SOFTWARE.
 #ifndef _I2CDEV_HPP_
 #define _I2CDEV_HPP_
 
-#include "main.hpp"
-
 // -----------------------------------------------------------------------------
 // Enable deprecated pgmspace typedefs in avr-libc
 // -----------------------------------------------------------------------------
