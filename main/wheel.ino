@@ -28,23 +28,6 @@ void Wheels::SetUpWheel()
   ledcAttachPin(PWM_PIN_C, CHANNEL_C);
 }
 
-//void Wheels::SetUpEncoder()
-//{
-//  pinMode(ENCL_A, INPUT);
-//  pinMode(ENCL_B, INPUT);
-//  pinMode(ENCR_A, INPUT);
-//  pinMode(ENCR_B, INPUT);
-//  pinMode(ENCC_A, INPUT);
-//  pinMode(ENCC_B, INPUT);
-//
-//  attachInterrupt(ENCL_A, Wheels::EncoderReadL, CHANGE);
-//  attachInterrupt(ENCL_B, Wheels::EncoderReadL, CHANGE);
-//  attachInterrupt(ENCR_A, Wheels::EncoderReadR, CHANGE);
-//  attachInterrupt(ENCR_B, Wheels::EncoderReadR, CHANGE);
-//  attachInterrupt(ENCC_A, Wheels::EncoderReadC, CHANGE);
-//  attachInterrupt(ENCC_B, Wheels::EncoderReadC, CHANGE);
-//}
-
 void Wheels::EncoderReadL()
 {
   enc_l.EncoderRead();
@@ -68,7 +51,10 @@ float Wheels::GetWheelVel(float dt)
   enc_r.count = 0;
   wheel_vel_c = -1.0 * float(enc_c.count) * M_PI / 50.0 / dt;
   enc_c.count = 0;
-//  Serial.println(wheel_vel_c);
+  //  Serial.println(wheel_vel_c);
+  Serial.print(wheel_vel_l);
+  Serial.print(",");
+  Serial.println(wheel_vel_r);
 
   return wheel_vel_c;
 }
@@ -137,8 +123,8 @@ void WheelsController::Control_1d(float theta, float dot_theta, float omega)
   {
     digitalWrite(ROT_DIR_C, HIGH);
     ledcWrite(CHANNEL_C, 1023);
-//    Serial.print(0);
-//    Serial.print(",");
+    //    Serial.print(0);
+    //    Serial.print(",");
   }
 }
 

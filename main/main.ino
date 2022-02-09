@@ -33,7 +33,7 @@ void setup() {
   pinMode(MODE_PIN, INPUT_PULLUP);
   attachInterrupt(MODE_PIN, ModeOnOff, FALLING);
 
-//  DispInit();
+  DispInit();
 
   wheels.SetUpWheel();
   SetUpEncoder();
@@ -42,9 +42,8 @@ void setup() {
   gyro.OffsetCalc();
   gyro.KalmanInit();
 
-  // DispInit();
   wheels.WheelBrakeOff();
-
+  
   // timer interruption
 //  hw_timer_t * timer = NULL;
 //  timer = timerBegin(0, 80, true); //timer=1us
@@ -73,12 +72,12 @@ void loop() {
   // side inverted
   if (Mode == 0)
   {
-    controller.Control_1d(y, dot_y, omega);
+//    controller.Control_1d(y, dot_y, omega);
   }
 
   wheels.WheelBrakeOn(y);
 
-  // delay(9);
+   delay(100);
 }
 
 //void Control() {
