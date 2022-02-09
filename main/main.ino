@@ -12,13 +12,13 @@ float dt;
 
 int Mode = 0;
 
-float y;
-float dot_y;
-float omega;
+std::array<float, 3> theta;
+std::array<float, 3> dot_theta;
+std::array<float, 3> omega;
 
 Gyro gyro;
 Wheels wheels;
-WheelsController controller(1000, 100.0, 3.0, 8.0, 15.0, 1.4, 8.0, 15.0, 1.4);
+WheelsController controller(2000, 100.0, 1.0, 8.0, 15.0, 1.4, 8.0, 15.0, 1.4);
 // Kpc, Kdc, Kwc, Kpl, Kdl, Kwl, Kpr, Kdr, Kwr
 
 //void IRAM_ATTR Interrupt() {
@@ -44,11 +44,11 @@ void setup() {
 
   wheels.WheelBrakeOff();
   
-  // timer interruption
+//   timer interruption
 //  hw_timer_t * timer = NULL;
-//  timer = timerBegin(0, 80, true); //timer=1us
+//  timer = timerBegin(0, 0.8, true); //timer = 10us
 //  timerAttachInterrupt(timer, &Interrupt, true);
-//  timerAlarmWrite(timer, 10000, true); // 10ms
+//  timerAlarmWrite(timer, 100, true); // 10ms
 //  timerAlarmEnable(timer);
 }
 
@@ -59,25 +59,21 @@ void loop() {
 
   gyro.GetRawAngle();
   gyro.GetRawGyro();
-  y = gyro.GetEstAngle(dt);
-  dot_y = gyro.GetEstGyro();
+  theta = gyro.GetEstAngle(dt);
+  dot_theta = gyro.GetEstGyro();
   omega = wheels.GetWheelVel(dt);
 
-  //  controller.TestControl();
-
-  //  Serial.print(y);
+//    Serial.println(omega[0]);
 //    Serial.print(",");
   //  Serial.println(dt,4);
 
   // side inverted
   if (Mode == 0)
   {
-//    controller.Control_1d(y, dot_y, omega);
+    controller.Control_1d(theta[0], dot_theta[0], omega[0]);
   }
 
-  wheels.WheelBrakeOn(y);
-
-   delay(100);
+  wheels.WheelBrakeOn(theta[0]);
 }
 
 //void Control() {
@@ -86,14 +82,14 @@ void loop() {
 //  y = gyro.GetEstAngle(0.01);
 //  dot_y = gyro.GetEstGyro();
 //  omega = wheels.GetWheelVel(0.01);
-//
-//  // side inverted
+//  Serial.println(y);
+
+  // side inverted
 //  if (Mode == 0)
 //  {
 //    controller.Control_1d(y, dot_y, omega);
 //  }
 //  wheels.WheelBrakeOn(y);
-//  Serial.println(y);
 //}
 
 void SetUpEncoder()

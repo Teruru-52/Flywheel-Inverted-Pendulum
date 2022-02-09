@@ -8,7 +8,7 @@ class Gyro
 {
 private:
     MPU6050 mpu;
-    Kalman kalmanX, kalmanY;
+    Kalman kalmanZ, kalmanC, kalmanL, kalmanR;
     
     int16_t ax, ay, az;
     int16_t gx, gy, gz;
@@ -16,10 +16,14 @@ private:
     float gyroXoffset = 0, gyroYoffset = 0, gyroZoffset = 0;
     float accX = 0, accY = 0, accZ = 0;
     float gyroX = 0, gyroY = 0, gyroZ = 0;
-    float theta_x, theta_y;
-    float theta_x_est, theta_y_est;
-    float dot_theta_x, dot_theta_y;
-    float dot_theta_x_est, dot_theta_y_est;
+    float theta_z;
+    float theta_z_est;
+    float dot_theta_z;
+    float dot_theta_z_est;
+    std::array<float, 3> theta;
+    std::array<float, 3> theta_est;
+    std::array<float, 3> dot_theta;
+    std::array<float, 3> dot_theta_est;
 
 public:
     void GyroInit();
@@ -27,8 +31,8 @@ public:
     void GetRawAngle();
     void GetRawGyro();
     void KalmanInit();
-    float GetEstAngle(float dt);
-    float GetEstGyro();
+    std::array<float, 3> GetEstAngle(float dt);
+    std::array<float, 3>  GetEstGyro();
 };
 
 #endif  // _GYRO_HPP_

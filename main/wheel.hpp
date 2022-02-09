@@ -1,5 +1,6 @@
 #ifndef _WHEEL_HPP_
 #define _WHEEL_HPP_
+#include "main.hpp"
 #include "encoder.hpp"
 #include "gyro.hpp"
 
@@ -26,7 +27,7 @@ private:
     Encoder enc_r;
     Encoder enc_c;
     const float angle_limit = 20.0 * M_PI / 180; // [rad]
-    float wheel_vel_l, wheel_vel_r, wheel_vel_c;
+    std::array<float, 3> wheel_vel;
 
 public:
     Wheels();
@@ -36,7 +37,7 @@ public:
     void EncoderReadL();
     void EncoderReadR();
     void EncoderReadC();
-    float GetWheelVel(float dt);
+    std::array<float, 3> GetWheelVel(float dt);
     void WheelBrakeOn(float theta);
     void WheelBrakeOff();
 };

@@ -43,20 +43,16 @@ void Wheels::EncoderReadC()
   enc_c.EncoderRead();
 }
 
-float Wheels::GetWheelVel(float dt)
+std::array<float, 3> Wheels::GetWheelVel(float dt)
 {
-  wheel_vel_l = -1.0 * float(enc_l.count) * M_PI / 50.0 / dt; // 2×π/100=0.0628 [rad]
-  enc_l.count = 0;
-  wheel_vel_r = -1.0 * float(enc_r.count) * M_PI / 50.0 / dt;
-  enc_r.count = 0;
-  wheel_vel_c = -1.0 * float(enc_c.count) * M_PI / 50.0 / dt;
+  wheel_vel[0] = -1.0 * float(enc_c.count) * M_PI / 50.0 / dt; // 2×π/100=0.0628 [rad]
   enc_c.count = 0;
-  //  Serial.println(wheel_vel_c);
-  Serial.print(wheel_vel_l);
-  Serial.print(",");
-  Serial.println(wheel_vel_r);
+  wheel_vel[1] = -1.0 * float(enc_l.count) * M_PI / 50.0 / dt;
+  enc_l.count = 0;
+  wheel_vel[2] = -1.0 * float(enc_r.count) * M_PI / 50.0 / dt;
+  enc_r.count = 0;
 
-  return wheel_vel_c;
+  return wheel_vel;
 }
 
 void Wheels::WheelBrakeOn(float theta)
@@ -66,21 +62,31 @@ void Wheels::WheelBrakeOn(float theta)
   //   digitalWrite(BRAKE_R, LOW);
   if (fabs(theta) > angle_limit)
   {
-    digitalWrite(BRAKE_C, LOW);
-    digitalWrite(BRAKE_L, LOW);
-    digitalWrite(BRAKE_R, LOW);
-  }
-  else {
     ledcWrite(CHANNEL_C, 1023);
+    digitalWrite(BRAKE_C, LOW);
+  }
+//  if (fabs(theta[1]) > angle_limit)
+//  {
+//    ledcWrite(CHANNEL_L, 1023);
+//    digitalWrite(BRAKE_L, LOW);
+//  }
+//  if (fabs(theta[2]) > angle_limit)
+//  {
+//    ledcWrite(CHANNEL_R, 1023);
+//    digitalWrite(BRAKE_R, LOW);
+//  }
+  else {
     digitalWrite(BRAKE_C, HIGH);
+//    digitalWrite(BRAKE_L, HIGH);
+//    digitalWrite(BRAKE_R, HIGH);
   }
 }
 
 void Wheels::WheelBrakeOff()
 {
   digitalWrite(BRAKE_C, HIGH);
-  //  digitalWrite(BRAKE_L, HIGH);
-  //  digitalWrite(BRAKE_R, HIGH);
+//  digitalWrite(BRAKE_L, HIGH);
+//  digitalWrite(BRAKE_R, HIGH);
 }
 
 WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr)
@@ -108,16 +114,16 @@ void WheelsController::Control_1d(float theta, float dot_theta, float omega)
     input_c = 1023 - input_offset - input_c;
     digitalWrite(ROT_DIR_C, HIGH);
     ledcWrite(CHANNEL_C, input_c);
-    Serial.print(input_c);
-    Serial.print(",");
+//    Serial.print(input_c);
+//    Serial.print(",");
   }
   else if (input_c < 0)
   {
     input_c = 1023 - input_offset + input_c;
     digitalWrite(ROT_DIR_C, LOW);
     ledcWrite(CHANNEL_C, input_c);
-    Serial.print(input_c);
-    Serial.print(",");
+//    Serial.print(input_c);
+//    Serial.print(",");
   }
   else // input_c == 0
   {
