@@ -87,6 +87,21 @@ void Wheels::WheelBrakeOn(int Mode, std::array<float, 3> theta)
     }
     else digitalWrite(BRAKE_R, HIGH);
   }
+  if (Mode == 4) {
+    if ((fabs(theta[0]) > angle_limit) || (fabs(theta[1]) > angle_limit) || (fabs(theta[2]) > angle_limit)) {
+      ledcWrite(CHANNEL_C, 1023);
+      digitalWrite(BRAKE_C, LOW);
+      ledcWrite(CHANNEL_L, 1023);
+      digitalWrite(BRAKE_L, LOW);
+      ledcWrite(CHANNEL_R, 1023);
+      digitalWrite(BRAKE_R, LOW);
+    }
+    else {
+      digitalWrite(BRAKE_C, HIGH);
+      digitalWrite(BRAKE_L, HIGH);
+      digitalWrite(BRAKE_R, HIGH);
+    }
+  }
 }
 
 void Wheels::WheelBrakeOff(int Mode)
@@ -219,11 +234,11 @@ void WheelsController::Control_1d(int Mode, std::array<float, 3>  theta, std::ar
   }
 }
 
-// void WheelsController::Control_3d(){
-//   MtL = KpL * kalAngleL + KdL * kalAngleDotL + KwL * theta_YdotWheel;
-//   MtL = max(-1.0f, min(1.0f, MtL));
-//   input_r = 1023 * (1.0 - fabs(MtL)) - 43.0;
-// }
+void WheelsController::Control_3d(std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega) {
+  Control_1d(1, theta, dot_theta, omega);
+  Control_1d(2, theta, dot_theta, omega);
+  Control_1d(3, theta, dot_theta, omega);
+}
 
 void WheelsController::TestControl() {
   digitalWrite(ROT_DIR_C, HIGH); // ホイール右回転

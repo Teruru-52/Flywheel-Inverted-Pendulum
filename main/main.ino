@@ -64,15 +64,18 @@ void loop() {
   omega = wheels.GetWheelVel(dt);
 
   // side inverted
-  controller.Control_1d(Mode, theta, dot_theta, omega);
+  if (Mode == 4) {
+    controller.Control_3d(theta, dot_theta, omega);
+  }
+  else controller.Control_1d(Mode, theta, dot_theta, omega);
 
   wheels.WheelBrakeOn(Mode, theta);
-    Serial.print(omega[0]);
-    Serial.print(",");
-    Serial.print(omega[1]);
-    Serial.print(",");
-    Serial.print(omega[2]);
-    Serial.print(",");
+  Serial.print(omega[0]);
+  Serial.print(",");
+  Serial.print(omega[1]);
+  Serial.print(",");
+  Serial.print(omega[2]);
+  Serial.print(",");
   Serial.println(dt * 1000);
   delay(8);
 }
@@ -137,6 +140,10 @@ void ModeOnOff() {
     wheels.WheelBrakeOff(Mode);
   }
   else if (Mode == 3) {
+    Mode = 4;
+    wheels.WheelBrakeOff(Mode);
+  }
+  else if (Mode == 4) {
     Mode = 0;
     wheels.WheelBrakeOff(Mode);
   }

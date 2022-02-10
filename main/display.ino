@@ -48,6 +48,9 @@ void Disp(void *pvParameters) {
     else if (Mode == 3) {
       display.println("Side inverted R");
     }
+    else if (Mode == 4) {
+      display.println("Point inverted");
+    }
     display.print("Mode ");
     display.println(Mode);
 
