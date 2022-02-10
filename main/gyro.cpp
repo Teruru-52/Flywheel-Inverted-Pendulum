@@ -2,91 +2,91 @@
 
 void Gyro::GyroInit()
 {
-    // initialize device
-    Serial.println("Initializing I2C devices...");
-    mpu.initialize();
+  // initialize device
+  Serial.println("Initializing I2C devices...");
+  mpu.initialize();
 
-    // verify connection
-    Serial.println("Testing device connections...");
-    Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+  // verify connection
+  Serial.println("Testing device connections...");
+  Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
 
-    mpu.setXAccelOffset(-2549);
-    mpu.setYAccelOffset(-1439);
-    mpu.setZAccelOffset(1537);
-    mpu.setXGyroOffset(-433);
-    mpu.setYGyroOffset(3);
-    mpu.setZGyroOffset(60);
+  mpu.setXAccelOffset(-2549);
+  mpu.setYAccelOffset(-1439);
+  mpu.setZAccelOffset(1537);
+  mpu.setXGyroOffset(-433);
+  mpu.setYGyroOffset(3);
+  mpu.setZGyroOffset(60);
 }
 
 void Gyro::OffsetCalc()
 {
-    delay(700);
+  delay(700);
 
-    for (int i = 0; i < 100; i++)
-    {
-        mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-        accX = ax / 16384.0;
-        accY = ay / 16384.0;
-        accZ = az / 16384.0;
-        gyroX = gx / 131.072;
-        gyroY = gy / 131.072;
-        gyroZ = gz / 131.072;
-
-        delay(30);
-
-        accXoffset += accX;
-        accYoffset += accY;
-        accZoffset += accZ;
-        gyroXoffset += gyroX;
-        gyroYoffset += gyroY;
-        gyroZoffset += gyroZ;
-    }
-
-    if (accXoffset < 0)
-    {
-        accXoffset = accXoffset / 100 + 1.0 / sqrt(2.0);
-    }
-    else
-    {
-        accXoffset = accXoffset / 100 - 1.0 / sqrt(2.0);
-    }
-    accYoffset /= 10;
-    accZoffset = accZoffset / 100 - 1.0 / sqrt(2.0);
-    gyroXoffset /= 100;
-    gyroYoffset /= 100;
-    gyroZoffset /= 100;
-}
-
-void Gyro::GetRawAngle()
-{
-    mpu.getAcceleration(&ax, &ay, &az);
+  for (int i = 0; i < 100; i++)
+  {
+    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
     accX = ax / 16384.0;
     accY = ay / 16384.0;
     accZ = az / 16384.0;
-
-    theta_z = atan2(-1.0 * (accY - accYoffset), (accZ - accZoffset)); // [rad]
-    theta[0] = atan2(-1.0 * (accX - accXoffset), (accZ - accZoffset)); // center
-    theta[1] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(M_PI/4.0) + (accZ - accZoffset) * cos(M_PI/4.0)); // left
-    theta[2] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(-M_PI/4.0) + (accZ - accZoffset) * cos(-M_PI/4.0)); //right
-}
-
-void Gyro::GetRawGyro()
-{
-    mpu.getRotation(&gx, &gy, &gz);
     gyroX = gx / 131.072;
     gyroY = gy / 131.072;
     gyroZ = gz / 131.072;
 
-    dot_theta_z = (gyroZ - gyroZoffset) * M_PI / 180; // [rad/s]
-    dot_theta[0] = (gyroY - gyroYoffset) * M_PI / 180; // center
-    dot_theta[1] = (gyroX - gyroXoffset + (gyroZ - gyroZoffset)) * M_PI / 180; // left
-    dot_theta[2] = (gyroX - gyroXoffset - (gyroZ - gyroZoffset)) * M_PI / 180; // right
+    delay(30);
+
+    accXoffset += accX;
+    accYoffset += accY;
+    accZoffset += accZ;
+    gyroXoffset += gyroX;
+    gyroYoffset += gyroY;
+    gyroZoffset += gyroZ;
+  }
+
+  if (accXoffset < 0)
+  {
+    accXoffset = accXoffset / 100 + 1.0 / sqrt(2.0);
+  }
+  else
+  {
+    accXoffset = accXoffset / 100 - 1.0 / sqrt(2.0);
+  }
+  accYoffset /= 10;
+  accZoffset = accZoffset / 100 - 1.0 / sqrt(2.0);
+  gyroXoffset /= 100;
+  gyroYoffset /= 100;
+  gyroZoffset /= 100;
+}
+
+void Gyro::GetRawAngle()
+{
+  mpu.getAcceleration(&ax, &ay, &az);
+  accX = ax / 16384.0;
+  accY = ay / 16384.0;
+  accZ = az / 16384.0;
+
+  theta_z = atan2(-1.0 * (accY - accYoffset), (accZ - accZoffset)); // [rad]
+  theta[0] = atan2(-1.0 * (accX - accXoffset), (accZ - accZoffset)); // center
+  theta[1] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(M_PI / 4.0) + (accZ - accZoffset) * cos(M_PI / 4.0)) - M_PI / 4.0; // left
+  theta[2] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(-M_PI / 4.0) + (accZ - accZoffset) * cos(-M_PI / 4.0)) - M_PI / 4.0; //right
+}
+
+void Gyro::GetRawGyro()
+{
+  mpu.getRotation(&gx, &gy, &gz);
+  gyroX = gx / 131.072;
+  gyroY = gy / 131.072;
+  gyroZ = gz / 131.072;
+
+  dot_theta_z = (gyroZ - gyroZoffset) * M_PI / 180; // [rad/s]
+  dot_theta[0] = (gyroY - gyroYoffset) * M_PI / 180; // center
+  dot_theta[1] = (gyroX - gyroXoffset + (gyroZ - gyroZoffset)) * M_PI / 180; // left
+  dot_theta[2] = (gyroX - gyroXoffset - (gyroZ - gyroZoffset)) * M_PI / 180; // right
 }
 
 void Gyro::KalmanInit()
 {
   // get theta
-//  GetAngleRaw();
+  //  GetAngleRaw();
   // set initial angle
   kalmanZ.setAngle(theta_z);
   kalmanC.setAngle(theta[0]);

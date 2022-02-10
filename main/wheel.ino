@@ -7,16 +7,16 @@ Wheels::Wheels()
 
 void Wheels::SetUpWheel()
 {
+  pinMode(BRAKE_C, OUTPUT);
   pinMode(BRAKE_L, OUTPUT);
   pinMode(BRAKE_R, OUTPUT);
-  pinMode(BRAKE_C, OUTPUT);
+  pinMode(ROT_DIR_C, OUTPUT);
   pinMode(ROT_DIR_L, OUTPUT);
   pinMode(ROT_DIR_R, OUTPUT);
-  pinMode(ROT_DIR_C, OUTPUT);
 
+  digitalWrite(BRAKE_C, LOW);
   digitalWrite(BRAKE_L, LOW);
   digitalWrite(BRAKE_R, LOW);
-  digitalWrite(BRAKE_C, LOW);
 
   // ledcSetup(uint8_t chan, double freq, uint8_t bit_num);
   // PWM 20kHz, 10bit
@@ -26,6 +26,10 @@ void Wheels::SetUpWheel()
   ledcAttachPin(PWM_PIN_R, CHANNEL_R);
   ledcSetup(CHANNEL_C, 20000, 10);
   ledcAttachPin(PWM_PIN_C, CHANNEL_C);
+
+  ledcWrite(CHANNEL_C, 1023);
+  ledcWrite(CHANNEL_L, 1023);
+  ledcWrite(CHANNEL_R, 1023);
 }
 
 void Wheels::EncoderReadL()
@@ -55,38 +59,53 @@ std::array<float, 3> Wheels::GetWheelVel(float dt)
   return wheel_vel;
 }
 
-void Wheels::WheelBrakeOn(float theta)
+void Wheels::WheelBrakeOn(int Mode, std::array<float, 3> theta)
 {
-  // if(fabs(theta_x_est) > angle_limit)
-  //   digitalWrite(BRAKE_L, LOW);
-  //   digitalWrite(BRAKE_R, LOW);
-  if (fabs(theta) > angle_limit)
-  {
-    ledcWrite(CHANNEL_C, 1023);
+  if (Mode == 0) {
     digitalWrite(BRAKE_C, LOW);
+    digitalWrite(BRAKE_L, LOW);
+    digitalWrite(BRAKE_R, LOW);
   }
-//  if (fabs(theta[1]) > angle_limit)
-//  {
-//    ledcWrite(CHANNEL_L, 1023);
-//    digitalWrite(BRAKE_L, LOW);
-//  }
-//  if (fabs(theta[2]) > angle_limit)
-//  {
-//    ledcWrite(CHANNEL_R, 1023);
-//    digitalWrite(BRAKE_R, LOW);
-//  }
-  else {
-    digitalWrite(BRAKE_C, HIGH);
-//    digitalWrite(BRAKE_L, HIGH);
-//    digitalWrite(BRAKE_R, HIGH);
+  if (Mode == 1) {
+    if (fabs(theta[Mode - 1]) > angle_limit) {
+      ledcWrite(CHANNEL_C, 1023);
+      digitalWrite(BRAKE_C, LOW);
+    }
+    else digitalWrite(BRAKE_C, HIGH);
+  }
+  if (Mode == 2) {
+    if (fabs(theta[Mode - 1]) > angle_limit) {
+      ledcWrite(CHANNEL_L, 1023);
+      digitalWrite(BRAKE_L, LOW);
+    }
+    else digitalWrite(BRAKE_L, HIGH);
+  }
+  if (Mode == 3) {
+    if (fabs(theta[Mode - 1]) > angle_limit) {
+      ledcWrite(CHANNEL_R, 1023);
+      digitalWrite(BRAKE_R, LOW);
+    }
+    else digitalWrite(BRAKE_R, HIGH);
   }
 }
 
-void Wheels::WheelBrakeOff()
+void Wheels::WheelBrakeOff(int Mode)
 {
-  digitalWrite(BRAKE_C, HIGH);
-//  digitalWrite(BRAKE_L, HIGH);
-//  digitalWrite(BRAKE_R, HIGH);
+  if (Mode == 1) {
+    digitalWrite(BRAKE_C, HIGH);
+    digitalWrite(BRAKE_L, LOW);
+    digitalWrite(BRAKE_R, LOW);
+  }
+  if (Mode == 2) {
+    digitalWrite(BRAKE_C, LOW);
+    digitalWrite(BRAKE_L, HIGH);
+    digitalWrite(BRAKE_R, LOW);
+  }
+  if (Mode == 3) {
+    digitalWrite(BRAKE_C, LOW);
+    digitalWrite(BRAKE_L, LOW);
+    digitalWrite(BRAKE_R, HIGH);
+  }
 }
 
 WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr)
@@ -114,16 +133,16 @@ void WheelsController::Control_1d(float theta, float dot_theta, float omega)
     input_c = 1023 - input_offset - input_c;
     digitalWrite(ROT_DIR_C, HIGH);
     ledcWrite(CHANNEL_C, input_c);
-//    Serial.print(input_c);
-//    Serial.print(",");
+    //    Serial.print(input_c);
+    //    Serial.print(",");
   }
   else if (input_c < 0)
   {
     input_c = 1023 - input_offset + input_c;
     digitalWrite(ROT_DIR_C, LOW);
     ledcWrite(CHANNEL_C, input_c);
-//    Serial.print(input_c);
-//    Serial.print(",");
+    //    Serial.print(input_c);
+    //    Serial.print(",");
   }
   else // input_c == 0
   {
@@ -134,10 +153,78 @@ void WheelsController::Control_1d(float theta, float dot_theta, float omega)
   }
 }
 
+void WheelsController::Control_1d_l(float theta, float dot_theta, float omega)
+{
+  input_l = Kpl * theta + Kdl * dot_theta + Kwl * omega;
+
+  if (input_l > input_limit)
+    input_l = input_limit;
+  if (input_l < -input_limit)
+    input_l = -input_limit;
+
+  if (input_l > 0)
+  {
+    input_l = 1023 - input_offset - input_l;
+    digitalWrite(ROT_DIR_L, HIGH);
+    ledcWrite(CHANNEL_L, input_l);
+    //    Serial.print(input_l);
+    //    Serial.print(",");
+  }
+  else if (input_l < 0)
+  {
+    input_l = 1023 - input_offset + input_l;
+    digitalWrite(ROT_DIR_L, LOW);
+    ledcWrite(CHANNEL_L, input_l);
+    //    Serial.print(input_l);
+    //    Serial.print(",");
+  }
+  else // input_l == 0
+  {
+    digitalWrite(ROT_DIR_L, HIGH);
+    ledcWrite(CHANNEL_L, 1023);
+    //    Serial.print(0);
+    //    Serial.print(",");
+  }
+}
+
+void WheelsController::Control_1d_r(float theta, float dot_theta, float omega)
+{
+  input_r = Kpr * theta + Kdr * dot_theta + Kwr * omega;
+
+  if (input_r > input_limit)
+    input_r = input_limit;
+  if (input_r < -input_limit)
+    input_r = -input_limit;
+
+  if (input_r > 0)
+  {
+    input_r = 1023 - input_offset - input_r;
+    digitalWrite(ROT_DIR_R, LOW);
+    ledcWrite(CHANNEL_R, input_r);
+    //    Serial.print(input_r);
+    //    Serial.print(",");
+  }
+  else if (input_r < 0)
+  {
+    input_r = 1023 - input_offset + input_r;
+    digitalWrite(ROT_DIR_R, HIGH);
+    ledcWrite(CHANNEL_R, input_r);
+    //    Serial.print(input_r);
+    //    Serial.print(",");
+  }
+  else // input_r == 0
+  {
+    digitalWrite(ROT_DIR_R, HIGH);
+    ledcWrite(CHANNEL_R, 1023);
+    //    Serial.print(0);
+    //    Serial.print(",");
+  }
+}
+
 // void WheelsController::Control_3d(){
 //   MtL = KpL * kalAngleL + KdL * kalAngleDotL + KwL * theta_YdotWheel;
 //   MtL = max(-1.0f, min(1.0f, MtL));
-//   input_c = 1023 * (1.0 - fabs(MtL)) - 43.0;
+//   input_r = 1023 * (1.0 - fabs(MtL)) - 43.0;
 // }
 
 void WheelsController::TestControl() {

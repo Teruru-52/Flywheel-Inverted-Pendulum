@@ -38,8 +38,8 @@ public:
     void EncoderReadR();
     void EncoderReadC();
     std::array<float, 3> GetWheelVel(float dt);
-    void WheelBrakeOn(float theta);
-    void WheelBrakeOff();
+    void WheelBrakeOn(int Mode, std::array<float, 3> theta);
+    void WheelBrakeOff(int Mode);
 };
 
 class WheelsController
@@ -57,6 +57,8 @@ public:
     WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr);
 
     void Control_1d(float theta, float dot_theta, float omega);
+    void Control_1d_l(float theta, float dot_theta, float omega);
+    void Control_1d_r(float theta, float dot_theta, float omega);
     void Control_3d();
     void TestControl();
 };

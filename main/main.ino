@@ -18,7 +18,7 @@ std::array<float, 3> omega;
 
 Gyro gyro;
 Wheels wheels;
-WheelsController controller(2000, 100.0, 1.0, 8.0, 15.0, 1.4, 8.0, 15.0, 1.4);
+WheelsController controller(500, 200.0, 1.0, 500.0, 200.0, 1.0, 500.0, 200.0, 1.0);
 // Kpc, Kdc, Kwc, Kpl, Kdl, Kwl, Kpr, Kdr, Kwr
 
 //void IRAM_ATTR Interrupt() {
@@ -42,14 +42,14 @@ void setup() {
   gyro.OffsetCalc();
   gyro.KalmanInit();
 
-  wheels.WheelBrakeOff();
-  
-//   timer interruption
-//  hw_timer_t * timer = NULL;
-//  timer = timerBegin(0, 0.8, true); //timer = 10us
-//  timerAttachInterrupt(timer, &Interrupt, true);
-//  timerAlarmWrite(timer, 100, true); // 10ms
-//  timerAlarmEnable(timer);
+  wheels.WheelBrakeOff(Mode);
+
+  //   timer interruption
+  //  hw_timer_t * timer = NULL;
+  //  timer = timerBegin(0, 0.8, true); //timer = 10us
+  //  timerAttachInterrupt(timer, &Interrupt, true);
+  //  timerAlarmWrite(timer, 100, true); // 10ms
+  //  timerAlarmEnable(timer);
 }
 
 void loop() {
@@ -63,17 +63,23 @@ void loop() {
   dot_theta = gyro.GetEstGyro();
   omega = wheels.GetWheelVel(dt);
 
-//    Serial.println(omega[0]);
-//    Serial.print(",");
+  //    Serial.println(omega[0]);
+  //    Serial.print(",");
   //  Serial.println(dt,4);
 
   // side inverted
-  if (Mode == 0)
+  if (Mode == 1)
   {
     controller.Control_1d(theta[0], dot_theta[0], omega[0]);
   }
+  if (Mode == 2) {
+    controller.Control_1d_l(theta[1], dot_theta[1], omega[1]);
+  }
+  if (Mode == 3) {
+    controller.Control_1d_r(theta[2], dot_theta[2], omega[2]);
+  }
 
-  wheels.WheelBrakeOn(theta[0]);
+  wheels.WheelBrakeOn(Mode, theta);
 }
 
 //void Control() {
@@ -84,7 +90,7 @@ void loop() {
 //  omega = wheels.GetWheelVel(0.01);
 //  Serial.println(y);
 
-  // side inverted
+// side inverted
 //  if (Mode == 0)
 //  {
 //    controller.Control_1d(y, dot_y, omega);
@@ -123,9 +129,19 @@ void ReadEncoderC() {
 
 void ModeOnOff() {
   Serial.println("ModeOnOff");
-  if (Mode) {
-    Mode = 0;
-  } else {
+  if (Mode == 0) {
     Mode = 1;
+    wheels.WheelBrakeOff(Mode);
+  }
+  else if (Mode == 1) {
+    Mode = 2;
+    wheels.WheelBrakeOff(Mode);
+  }
+  else if (Mode == 2) {
+    Mode = 3;
+    wheels.WheelBrakeOff(Mode);
+  }
+  else if (Mode == 3) {
+    Mode = 0;
   }
 }
