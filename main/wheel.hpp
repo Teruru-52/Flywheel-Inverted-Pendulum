@@ -56,9 +56,7 @@ private:
 public:
     WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr);
 
-    void Control_1d(float theta, float dot_theta, float omega);
-    void Control_1d_l(float theta, float dot_theta, float omega);
-    void Control_1d_r(float theta, float dot_theta, float omega);
+    void Control_1d(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega);
     void Control_3d();
     void TestControl();
 };

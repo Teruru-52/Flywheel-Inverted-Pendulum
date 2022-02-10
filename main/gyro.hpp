@@ -16,10 +16,10 @@ private:
     float gyroXoffset = 0, gyroYoffset = 0, gyroZoffset = 0;
     float accX = 0, accY = 0, accZ = 0;
     float gyroX = 0, gyroY = 0, gyroZ = 0;
-    float theta_z;
-    float theta_z_est;
-    float dot_theta_z;
-    float dot_theta_z_est;
+//    float theta_z;
+//    float theta_z_est;
+//    float dot_theta_z;
+//    float dot_theta_z_est;
     std::array<float, 3> theta;
     std::array<float, 3> theta_est;
     std::array<float, 3> dot_theta;

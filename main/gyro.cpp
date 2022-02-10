@@ -64,7 +64,7 @@ void Gyro::GetRawAngle()
   accY = ay / 16384.0;
   accZ = az / 16384.0;
 
-  theta_z = atan2(-1.0 * (accY - accYoffset), (accZ - accZoffset)); // [rad]
+//  theta_z = atan2(-1.0 * (accY - accYoffset), (accZ - accZoffset)); // [rad]
   theta[0] = atan2(-1.0 * (accX - accXoffset), (accZ - accZoffset)); // center
   theta[1] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(M_PI / 4.0) + (accZ - accZoffset) * cos(M_PI / 4.0)) - M_PI / 4.0; // left
   theta[2] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(-M_PI / 4.0) + (accZ - accZoffset) * cos(-M_PI / 4.0)) - M_PI / 4.0; //right
@@ -77,7 +77,7 @@ void Gyro::GetRawGyro()
   gyroY = gy / 131.072;
   gyroZ = gz / 131.072;
 
-  dot_theta_z = (gyroZ - gyroZoffset) * M_PI / 180; // [rad/s]
+//  dot_theta_z = (gyroZ - gyroZoffset) * M_PI / 180; // [rad/s]
   dot_theta[0] = (gyroY - gyroYoffset) * M_PI / 180; // center
   dot_theta[1] = (gyroX - gyroXoffset + (gyroZ - gyroZoffset)) * M_PI / 180; // left
   dot_theta[2] = (gyroX - gyroXoffset - (gyroZ - gyroZoffset)) * M_PI / 180; // right
@@ -85,10 +85,8 @@ void Gyro::GetRawGyro()
 
 void Gyro::KalmanInit()
 {
-  // get theta
-  //  GetAngleRaw();
   // set initial angle
-  kalmanZ.setAngle(theta_z);
+//  kalmanZ.setAngle(theta_z);
   kalmanC.setAngle(theta[0]);
   kalmanL.setAngle(theta[1]);
   kalmanR.setAngle(theta[2]);
@@ -96,7 +94,7 @@ void Gyro::KalmanInit()
 
 std::array<float, 3>  Gyro::GetEstAngle(float dt)
 {
-  theta_z_est = kalmanZ.getAngle(theta_z, dot_theta_z, dt);
+//  theta_z_est = kalmanZ.getAngle(theta_z, dot_theta_z, dt);
   theta_est[0] = kalmanC.getAngle(theta[0], dot_theta[0], dt); // center
   theta_est[1] = kalmanL.getAngle(theta[1], dot_theta[1], dt); // left
   theta_est[2] = kalmanR.getAngle(theta[2], dot_theta[2], dt); // right
@@ -106,7 +104,7 @@ std::array<float, 3>  Gyro::GetEstAngle(float dt)
 
 std::array<float, 3>  Gyro::GetEstGyro()
 {
-  dot_theta_z_est = kalmanZ.getRate();
+//  dot_theta_z_est = kalmanZ.getRate();
   dot_theta_est[0] = kalmanC.getRate(); // center
   dot_theta_est[1] = kalmanL.getRate(); // left
   dot_theta_est[2] = kalmanR.getRate(); // right

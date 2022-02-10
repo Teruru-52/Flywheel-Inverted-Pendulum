@@ -42,7 +42,7 @@ void setup() {
   gyro.OffsetCalc();
   gyro.KalmanInit();
 
-  wheels.WheelBrakeOff(Mode);
+  wheels.WheelBrakeOff(Mode); // initial Mode = 0
 
   //   timer interruption
   //  hw_timer_t * timer = NULL;
@@ -54,7 +54,7 @@ void setup() {
 
 void loop() {
   nowTime = micros();
-  dt = (float)(nowTime - oldTime) / 1000000.0; // sec
+  dt = (float)(nowTime - oldTime) / 1000000.0; // [µs]to[s]
   oldTime = nowTime;
 
   gyro.GetRawAngle();
@@ -63,23 +63,18 @@ void loop() {
   dot_theta = gyro.GetEstGyro();
   omega = wheels.GetWheelVel(dt);
 
-  //    Serial.println(omega[0]);
-  //    Serial.print(",");
-  //  Serial.println(dt,4);
-
   // side inverted
-  if (Mode == 1)
-  {
-    controller.Control_1d(theta[0], dot_theta[0], omega[0]);
-  }
-  if (Mode == 2) {
-    controller.Control_1d_l(theta[1], dot_theta[1], omega[1]);
-  }
-  if (Mode == 3) {
-    controller.Control_1d_r(theta[2], dot_theta[2], omega[2]);
-  }
+  controller.Control_1d(Mode, theta, dot_theta, omega);
 
   wheels.WheelBrakeOn(Mode, theta);
+    Serial.print(omega[0]);
+    Serial.print(",");
+    Serial.print(omega[1]);
+    Serial.print(",");
+    Serial.print(omega[2]);
+    Serial.print(",");
+  Serial.println(dt * 1000);
+  delay(8);
 }
 
 //void Control() {
@@ -100,19 +95,23 @@ void loop() {
 
 void SetUpEncoder()
 {
+  pinMode(ENCC_A, INPUT);
+  pinMode(ENCC_B, INPUT);
   pinMode(ENCL_A, INPUT);
   pinMode(ENCL_B, INPUT);
   pinMode(ENCR_A, INPUT);
   pinMode(ENCR_B, INPUT);
-  pinMode(ENCC_A, INPUT);
-  pinMode(ENCC_B, INPUT);
 
+  attachInterrupt(ENCC_A, ReadEncoderC, CHANGE);
+  attachInterrupt(ENCC_B, ReadEncoderC, CHANGE);
   attachInterrupt(ENCL_A, ReadEncoderL, CHANGE);
   attachInterrupt(ENCL_B, ReadEncoderL, CHANGE);
   attachInterrupt(ENCR_A, ReadEncoderR, CHANGE);
   attachInterrupt(ENCR_B, ReadEncoderR, CHANGE);
-  attachInterrupt(ENCC_A, ReadEncoderC, CHANGE);
-  attachInterrupt(ENCC_B, ReadEncoderC, CHANGE);
+}
+
+void ReadEncoderC() {
+  wheels.EncoderReadC();
 }
 
 void ReadEncoderL() {
@@ -121,10 +120,6 @@ void ReadEncoderL() {
 
 void ReadEncoderR() {
   wheels.EncoderReadR();
-}
-
-void ReadEncoderC() {
-  wheels.EncoderReadC();
 }
 
 void ModeOnOff() {
@@ -143,5 +138,6 @@ void ModeOnOff() {
   }
   else if (Mode == 3) {
     Mode = 0;
+    wheels.WheelBrakeOff(Mode);
   }
 }
