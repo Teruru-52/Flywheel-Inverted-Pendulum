@@ -67,6 +67,8 @@ void Wheels::WheelBrakeOn(int Mode, std::array<float, 3> theta)
     digitalWrite(BRAKE_R, LOW);
   }
   if (Mode == 1) {
+    digitalWrite(BRAKE_L, LOW);
+    digitalWrite(BRAKE_R, LOW);
     if (fabs(theta[Mode - 1]) > angle_limit) {
       ledcWrite(CHANNEL_C, 1023);
       digitalWrite(BRAKE_C, LOW);
@@ -74,6 +76,8 @@ void Wheels::WheelBrakeOn(int Mode, std::array<float, 3> theta)
     else digitalWrite(BRAKE_C, HIGH);
   }
   if (Mode == 2) {
+    digitalWrite(BRAKE_C, LOW);
+    digitalWrite(BRAKE_R, LOW);
     if (fabs(theta[Mode - 1]) > angle_limit) {
       ledcWrite(CHANNEL_L, 1023);
       digitalWrite(BRAKE_L, LOW);
@@ -81,6 +85,8 @@ void Wheels::WheelBrakeOn(int Mode, std::array<float, 3> theta)
     else digitalWrite(BRAKE_L, HIGH);
   }
   if (Mode == 3) {
+    digitalWrite(BRAKE_C, LOW);
+    digitalWrite(BRAKE_L, LOW);
     if (fabs(theta[Mode - 1]) > angle_limit) {
       ledcWrite(CHANNEL_R, 1023);
       digitalWrite(BRAKE_R, LOW);
@@ -104,25 +110,6 @@ void Wheels::WheelBrakeOn(int Mode, std::array<float, 3> theta)
   }
 }
 
-void Wheels::WheelBrakeOff(int Mode)
-{
-  if (Mode == 1) {
-    digitalWrite(BRAKE_C, HIGH);
-    digitalWrite(BRAKE_L, LOW);
-    digitalWrite(BRAKE_R, LOW);
-  }
-  if (Mode == 2) {
-    digitalWrite(BRAKE_C, LOW);
-    digitalWrite(BRAKE_L, HIGH);
-    digitalWrite(BRAKE_R, LOW);
-  }
-  if (Mode == 3) {
-    digitalWrite(BRAKE_C, LOW);
-    digitalWrite(BRAKE_L, LOW);
-    digitalWrite(BRAKE_R, HIGH);
-  }
-}
-
 WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr)
   : Kpc(Kpc),
     Kdc(Kdc),
@@ -132,106 +119,72 @@ WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, f
     Kwl(Kwl),
     Kpr(Kpr),
     Kdr(Kdr),
-    Kwr(Kwr) {}
+    Kwr(Kwr),
+    pre_error(0),
+    sum_error(0),
+    pre_error2(0),
+    sum_error2(0) {}
+
+void WheelsController::DirControl(int Mode, float input, int dir) {
+  if (Mode == 1) {
+    if (dir)
+      digitalWrite(ROT_DIR_C, LOW);
+    else
+      digitalWrite(ROT_DIR_C, HIGH);
+    ledcWrite(CHANNEL_C, input);
+  }
+  else if (Mode == 2) {
+    if (dir)
+      digitalWrite(ROT_DIR_L, LOW);
+    else
+      digitalWrite(ROT_DIR_L, HIGH);
+    ledcWrite(CHANNEL_L, input);
+  }
+  else if (Mode == 3) {
+    if (dir)
+      digitalWrite(ROT_DIR_R, HIGH);
+    else
+      digitalWrite(ROT_DIR_R, LOW);
+    ledcWrite(CHANNEL_R, input);
+  }
+}
+
+void WheelsController::WheelDrive(int Mode, float input) {
+  if (input > input_limit)
+    input = input_limit;
+  else if (input < -input_limit)
+    input = -input_limit;
+
+  if (input > 0)
+  {
+    //    Serial.println(input_r);
+    input = 1023 - input;
+    DirControl(Mode, input, 1);
+  }
+  else if (input < 0)
+  {
+    //    Serial.println(input_r);
+    input = 1023 + input;
+    DirControl(Mode, input, 0);
+  }
+  else // input == 0
+  {
+    input = 1023;
+    DirControl(Mode, input, 0);
+  }
+}
+
 
 void WheelsController::Control_1d(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega)
 {
-  if (Mode == 1) {
-    input_c = Kpc * theta[0] + Kdc * dot_theta[0] + Kwc * omega[0];
+  if (Mode == 1)
+    wheel_input = Kpc * theta[0] + Kdc * dot_theta[0] + Kwc * omega[0];
+  if (Mode == 2)
+    wheel_input = Kpl * theta[1] + Kdl * dot_theta[1] + Kwl * omega[1];
+  if (Mode == 3)
+    wheel_input = - (Kpr * theta[2] + Kdr * dot_theta[2] + Kwr * omega[2]);
 
-    if (input_c > input_limit)
-      input_c = input_limit;
-    if (input_c < -input_limit)
-      input_c = -input_limit;
-
-    if (input_c > 0)
-    {
-      input_c = 1023 - input_offset - input_c;
-      digitalWrite(ROT_DIR_C, HIGH);
-      ledcWrite(CHANNEL_C, input_c);
-      //    Serial.print(input_c);
-      //    Serial.print(",");
-    }
-    else if (input_c < 0)
-    {
-      input_c = 1023 - input_offset + input_c;
-      digitalWrite(ROT_DIR_C, LOW);
-      ledcWrite(CHANNEL_C, input_c);
-      //    Serial.print(input_c);
-      //    Serial.print(",");
-    }
-    else // input_c == 0
-    {
-      digitalWrite(ROT_DIR_C, HIGH);
-      ledcWrite(CHANNEL_C, 1023);
-      //    Serial.print(0);
-      //    Serial.print(",");
-    }
-  }
-  if (Mode == 2) {
-    input_l = Kpl * theta[1] + Kdl * dot_theta[1] + Kwl * omega[1];
-
-    if (input_l > input_limit)
-      input_l = input_limit;
-    if (input_l < -input_limit)
-      input_l = -input_limit;
-
-    if (input_l > 0)
-    {
-      input_l = 1023 - input_offset - input_l;
-      digitalWrite(ROT_DIR_L, HIGH);
-      ledcWrite(CHANNEL_L, input_l);
-      //    Serial.print(input_l);
-      //    Serial.print(",");
-    }
-    else if (input_l < 0)
-    {
-      input_l = 1023 - input_offset + input_l;
-      digitalWrite(ROT_DIR_L, LOW);
-      ledcWrite(CHANNEL_L, input_l);
-      //    Serial.print(input_l);
-      //    Serial.print(",");
-    }
-    else // input_l == 0
-    {
-      digitalWrite(ROT_DIR_L, HIGH);
-      ledcWrite(CHANNEL_L, 1023);
-      //    Serial.print(0);
-      //    Serial.print(",");
-    }
-  }
-  if (Mode == 3) {
-    input_r = Kpr * theta[2] + Kdr * dot_theta[2] + Kwr * omega[2];
-
-    if (input_r > input_limit)
-      input_r = input_limit;
-    if (input_r < -input_limit)
-      input_r = -input_limit;
-
-    if (input_r > 0)
-    {
-      input_r = 1023 - input_offset - input_r;
-      digitalWrite(ROT_DIR_R, LOW);
-      ledcWrite(CHANNEL_R, input_r);
-      //    Serial.print(input_r);
-      //    Serial.print(",");
-    }
-    else if (input_r < 0)
-    {
-      input_r = 1023 - input_offset + input_r;
-      digitalWrite(ROT_DIR_R, HIGH);
-      ledcWrite(CHANNEL_R, input_r);
-      //    Serial.print(input_r);
-      //    Serial.print(",");
-    }
-    else // input_r == 0
-    {
-      digitalWrite(ROT_DIR_R, HIGH);
-      ledcWrite(CHANNEL_R, 1023);
-      //    Serial.print(0);
-      //    Serial.print(",");
-    }
-  }
+  WheelDrive(Mode, wheel_input);
 }
 
 void WheelsController::Control_3d(std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega) {
@@ -240,7 +193,53 @@ void WheelsController::Control_3d(std::array<float, 3>  theta, std::array<float,
   Control_1d(3, theta, dot_theta, omega);
 }
 
-void WheelsController::TestControl() {
-  digitalWrite(ROT_DIR_C, HIGH); // ホイール右回転
-  ledcWrite(CHANNEL_C, 980);
+void WheelsController::VelocityControl(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega) {
+  if (fabs(theta[Mode - 1])  <= angle_limit) {
+    float tau_ref = Kpr * theta[Mode - 1] + Kdr * dot_theta[Mode - 1] + Kwr * omega[Mode - 1];
+    //  float omega_ref = omega[2] + tau_ref;
+    //float omega_ref = 300.0;
+    float error = tau_ref;
+    //  float error = omega_ref - omega[2];
+    //  float deriv = (pre_error - error) * 100;
+    //  pre_error = error;
+    sum_error += (error * 0.01);
+    float input = Kp * error + Ki * sum_error;
+
+    Serial.print(tau_ref);
+    Serial.print(",");
+    Serial.println(input);
+
+    WheelDrive(Mode, input);
+  }
+  else {
+    sum_error = 0;
+  }
+}
+
+void WheelsController::AngleControl(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta) {
+  if (fabs(theta[Mode - 1])  <= angle_limit) {
+    float error = - theta[Mode - 1];
+    float error2 = - dot_theta[Mode - 1];
+    sum_error += (error * 0.01);
+    sum_error2 += (error2 * 0.01);
+    float deriv = (pre_error - error) * 100;
+    float deriv2 = (pre_error2 - error) * 100;
+    pre_error = error;
+    pre_error2 = error2;
+    //    float input = kp2 * error2 + kd2 * deriv2 + ki2 * sum_error2;
+    float input = kp * error + kd * deriv + ki * sum_error;
+    Serial.println(input);
+
+    WheelDrive(Mode, input);
+  }
+  else {
+    sum_error = 0;
+    pre_error = 0;
+    sum_error2 = 0;
+    pre_error2 = 0;
+  }
+}
+
+void WheelsController::TestControl(int Mode) {
+  WheelDrive(Mode, 300);
 }

@@ -22,42 +22,64 @@
 
 class Wheels
 {
-private:
+  private:
     Encoder enc_l;
     Encoder enc_r;
     Encoder enc_c;
-    const float angle_limit = 20.0 * M_PI / 180; // [rad]
+    const float angle_limit = 10.0 * M_PI / 180; // [rad]
     std::array<float, 3> wheel_vel;
 
-public:
+  public:
     Wheels();
 
     void SetUpWheel();
-//    void SetUpEncoder();
+    //    void SetUpEncoder();
     void EncoderReadL();
     void EncoderReadR();
     void EncoderReadC();
     std::array<float, 3> GetWheelVel(float dt);
     void WheelBrakeOn(int Mode, std::array<float, 3> theta);
-    void WheelBrakeOff(int Mode);
 };
 
 class WheelsController
 {
-private:
+  private:
 
     float Kpc, Kdc, Kwc;
     float Kpl, Kdl, Kwl;
     float Kpr, Kdr, Kwr;
-    const int input_limit = 800;
-    const int input_offset = 43;
-    int input_l, input_r, input_c;
+    const int input_limit = 1023;
+    //    const int input_offset = 43;
+    int wheel_input;
+    float tau_ref;
+    float sum_error;
+    float pre_error;
+    float sum_error2;
+    float pre_error2;
+    const float angle_limit = 10.0 * M_PI / 180; // [rad]
+    //    float Kp = 10.8;
+    //    float Ki = 150.0;
+    //    float Kp = 0.021;
+    //    float Ki = 4.01;
+    float Kp = 33.7;
+    float Ki = 205.0;
 
-public:
+    float kp = 3500.0;
+    float kd = 3.0;
+    float ki = 1500.0;
+    float kp2 = 2000.0;
+    float kd2 = 0.0;
+    float ki2 = 700.0;
+
+  public:
     WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, float Kdl, float Kwl, float Kpr, float Kdr, float Kwr);
 
+    void DirControl(int Mode, float input, int dir);
+    void WheelDrive(int Mode, float input);
     void Control_1d(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega);
     void Control_3d(std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega);
-    void TestControl();
+    void VelocityControl(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega);
+    void AngleControl(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta);
+    void TestControl(int Mode);
 };
 #endif // _WHEEL_HPP_
