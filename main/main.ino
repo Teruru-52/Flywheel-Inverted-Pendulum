@@ -68,9 +68,9 @@ void loop() {
   //  controller.Control_1d(Mode, theta, dot_theta, omega);
 
   // point inverted
-  //    if (Mode == 4) {
-  //      controller.Control_3d(theta, dot_theta, omega);
-  //    }
+      if (Mode == 4) {
+        controller.Control_3d(theta, dot_theta, omega);
+      }
 
   wheels.WheelBrakeOn(Mode, theta);
   //  Serial.print(omega[0]);

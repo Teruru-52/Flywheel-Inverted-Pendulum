@@ -120,6 +120,7 @@ WheelsController::WheelsController(float Kpc, float Kdc, float Kwc, float Kpl, f
     Kpr(Kpr),
     Kdr(Kdr),
     Kwr(Kwr),
+    pre_input(0),
     pre_error(0),
     sum_error(0),
     pre_error2(0),
@@ -172,19 +173,21 @@ void WheelsController::WheelDrive(int Mode, float input) {
     input = 1023;
     DirControl(Mode, input, 0);
   }
+  Serial.println(input);
 }
 
 
 void WheelsController::Control_1d(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega)
 {
+  float input;
   if (Mode == 1)
-    wheel_input = Kpc * theta[0] + Kdc * dot_theta[0] + Kwc * omega[0];
+    input = Kpc * theta[0] + Kdc * dot_theta[0] + Kwc * omega[0];
   if (Mode == 2)
-    wheel_input = Kpl * theta[1] + Kdl * dot_theta[1] + Kwl * omega[1];
+    input = Kpl * theta[1] + Kdl * dot_theta[1] + Kwl * omega[1];
   if (Mode == 3)
-    wheel_input = - (Kpr * theta[2] + Kdr * dot_theta[2] + Kwr * omega[2]);
+    input = Kpr * theta[2] + Kdr * dot_theta[2] + Kwr * omega[2];
 
-  WheelDrive(Mode, wheel_input);
+  WheelDrive(Mode, input);
 }
 
 void WheelsController::Control_3d(std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega) {
@@ -228,6 +231,9 @@ void WheelsController::AngleControl(int Mode, std::array<float, 3>  theta, std::
     pre_error2 = error2;
     //    float input = kp2 * error2 + kd2 * deriv2 + ki2 * sum_error2;
     float input = kp * error + kd * deriv + ki * sum_error;
+    if ((pre_input > 0 && input < 0) || (pre_input < 0 && input > 0))
+      sum_error = 0;
+    pre_input = input;
     Serial.println(input);
 
     WheelDrive(Mode, input);

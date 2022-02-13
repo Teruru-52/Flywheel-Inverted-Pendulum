@@ -50,12 +50,11 @@ class WheelsController
     float Kpr, Kdr, Kwr;
     const int input_limit = 1023;
     //    const int input_offset = 43;
-    int wheel_input;
-    float tau_ref;
     float sum_error;
     float pre_error;
     float sum_error2;
     float pre_error2;
+    float pre_input;
     const float angle_limit = 10.0 * M_PI / 180; // [rad]
     //    float Kp = 10.8;
     //    float Ki = 150.0;
@@ -64,9 +63,9 @@ class WheelsController
     float Kp = 33.7;
     float Ki = 205.0;
 
-    float kp = 3500.0;
-    float kd = 3.0;
-    float ki = 1500.0;
+    float kp = 4000.0;
+    float kd = 150.0;
+    float ki = 1000.0;
     float kp2 = 2000.0;
     float kd2 = 0.0;
     float ki2 = 700.0;
