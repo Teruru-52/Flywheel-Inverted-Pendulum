@@ -26,7 +26,7 @@ class Wheels
     Encoder enc_l;
     Encoder enc_r;
     Encoder enc_c;
-    const float angle_limit = 10.0 * M_PI / 180; // [rad]
+    const float angle_limit = 6.0 * M_PI / 180; // [rad]
     std::array<float, 3> wheel_vel;
 
   public:
@@ -48,14 +48,16 @@ class WheelsController
     float Kpc, Kdc, Kwc;
     float Kpl, Kdl, Kwl;
     float Kpr, Kdr, Kwr;
-    const int input_limit = 1023;
+    const int input_limit = 200;
     //    const int input_offset = 43;
     float sum_error;
     float pre_error;
     float sum_error2;
     float pre_error2;
     float pre_input;
-    const float angle_limit = 10.0 * M_PI / 180; // [rad]
+    const float angle_limit = 6.0 * M_PI / 180; // [rad]
+    const float start_angle = 0.5 * M_PI / 180; // [rad]
+    bool start_flag = false;
     //    float Kp = 10.8;
     //    float Ki = 150.0;
     //    float Kp = 0.021;
@@ -63,9 +65,9 @@ class WheelsController
     float Kp = 33.7;
     float Ki = 205.0;
 
-    float kp = 4000.0;
-    float kd = 150.0;
-    float ki = 1000.0;
+//    float kp = 4000.0;
+//    float kd = 150.0;
+//    float ki = 1000.0;
     float kp2 = 2000.0;
     float kd2 = 0.0;
     float ki2 = 700.0;
@@ -75,10 +77,10 @@ class WheelsController
 
     void DirControl(int Mode, float input, int dir);
     void WheelDrive(int Mode, float input);
-    void Control_1d(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega);
+    void Control_1d(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega, float kp, float ki, float kd);
     void Control_3d(std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega);
     void VelocityControl(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, std::array<float, 3>  omega);
-    void AngleControl(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta);
+    void AngleControl(int Mode, std::array<float, 3>  theta, std::array<float, 3>  dot_theta, float kp, float ki, float kd);
     void TestControl(int Mode);
 };
 #endif // _WHEEL_HPP_

@@ -10,16 +10,23 @@
 unsigned long nowTime, oldTime;
 float dt;
 
-int Mode = 0;
+int Mode = 1;
+int tuning_mode = 0;
 
 std::array<float, 3> theta;
 std::array<float, 3> dot_theta;
 std::array<float, 3> omega;
+//float kp = 0;
+//float ki = 0;
+//float kd = 0;
+float kp = 900;
+float ki = 150.0;
+float kd = 0.83;
 
 Gyro gyro;
 Wheels wheels;
 //WheelsController controller(1800, 700.0, 3.0, 1000.0, 750.0, 0.0, 3.0, 5.0, 0.026);
-WheelsController controller(500, 200.0, 1.0, 500.0, 200.0, 1.0, 1000.0, 750.0, 0.0);
+WheelsController controller(900, 150.0, 0.83, 1330.0, 290.0, 0.73, 1220.0, 100.0, 0.49);
 // Kpc, Kdc, Kwc, Kpl, Kdl, Kwl, Kpr, Kdr, Kwr
 
 //void IRAM_ATTR Interrupt() {
@@ -32,8 +39,8 @@ void setup() {
 
   pinMode(RESET_PIN, INPUT_PULLUP);
   pinMode(MODE_PIN, INPUT_PULLUP);
-  attachInterrupt(RESET_PIN, Reset, FALLING);
-  attachInterrupt(MODE_PIN, ModeOnOff, FALLING);
+  //  attachInterrupt(RESET_PIN, Reset, FALLING);
+  //  attachInterrupt(MODE_PIN, ModeOnOff, FALLING);
 
   DispInit();
 
@@ -63,20 +70,53 @@ void loop() {
   dot_theta = gyro.GetEstGyro();
   omega = wheels.GetWheelVel(dt);
 
+  if (digitalRead(RESET_PIN) == LOW) {
+    tuning_mode++;
+    if (tuning_mode == 3) tuning_mode = 0;
+  }
+  if (digitalRead(MODE_PIN) == LOW) {
+    if (tuning_mode == 0) {
+      kp += 10;
+      if (kp > 5000) kp = 0;
+    }
+    if (tuning_mode == 1) {
+      ki += 5;
+      if (ki > 1000) ki = 0;
+    }
+    if (tuning_mode == 2) {
+      kd += 0.01;
+      if (kd > 5) kd = 0;
+    }
+  }
+    Serial.print(tuning_mode);
+    Serial.print(",");
+    Serial.print(kp);
+    Serial.print(",");
+    Serial.print(ki);
+    Serial.print(",");
+    Serial.print(kd);
+
+//  Serial.print(theta[1]);
+//  Serial.print(",");
+//  Serial.print(dot_theta[1]);
+//  Serial.print(",");
+//  Serial.print(omega[1]);
+
   // side inverted
-  controller.AngleControl(Mode, theta, dot_theta);
-  //  controller.Control_1d(Mode, theta, dot_theta, omega);
+  //  controller.AngleControl(Mode, theta, dot_theta, kp, ki, kd);
+  controller.Control_1d(Mode, theta, dot_theta, omega, kp, ki, kd);
 
   // point inverted
-      if (Mode == 4) {
-        controller.Control_3d(theta, dot_theta, omega);
-      }
+  if (Mode == 4) {
+    controller.Control_3d(theta, dot_theta, omega);
+  }
 
   wheels.WheelBrakeOn(Mode, theta);
   //  Serial.print(omega[0]);
   //  Serial.print(",");
   //  Serial.println(dt * 1000);
-  delay(8);
+
+  delay(6);
 }
 
 //void Control() {
@@ -122,26 +162,4 @@ void ReadEncoderL() {
 
 void ReadEncoderR() {
   wheels.EncoderReadR();
-}
-
-void Reset() {
-  Mode = 0;
-}
-void ModeOnOff() {
-  Serial.println("ModeOnOff");
-  if (Mode == 0) {
-    Mode = 1;
-  }
-  else if (Mode == 1) {
-    Mode = 2;
-  }
-  else if (Mode == 2) {
-    Mode = 3;
-  }
-  else if (Mode == 3) {
-    Mode = 4;
-  }
-  else if (Mode == 4) {
-    Mode = 0;
-  }
 }
