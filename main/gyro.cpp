@@ -25,36 +25,39 @@ void Gyro::OffsetCalc()
   for (int i = 0; i < 100; i++)
   {
     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    accX = ax / 16384.0;
-    accY = ay / 16384.0;
-    accZ = az / 16384.0;
+    //    accX = ax / 16384.0;
+    //    accY = ay / 16384.0;
+    //    accZ = az / 16384.0;
     gyroX = gx / 131.072;
     gyroY = gy / 131.072;
     gyroZ = gz / 131.072;
 
-    delay(30);
-
-    accXoffset += accX;
-    accYoffset += accY;
-    accZoffset += accZ;
+    //    accXoffset += accX;
+    //    accYoffset += accY;
+    //    accZoffset += accZ;
     gyroXoffset += gyroX;
     gyroYoffset += gyroY;
     gyroZoffset += gyroZ;
+
+    delay(10);
   }
 
-  if (accXoffset < 0)
-  {
-    accXoffset = accXoffset / 100 + 1.0 / sqrt(2.0);
-  }
-  else
-  {
-    accXoffset = accXoffset / 100 - 1.0 / sqrt(2.0);
-  }
-  accYoffset /= 10;
-  accZoffset = accZoffset / 100 - 1.0 / sqrt(2.0);
-  gyroXoffset /= 100;
-  gyroYoffset /= 100;
-  gyroZoffset /= 100;
+  //  if (accXoffset < 0)
+  //  {
+  //    accXoffset = accXoffset / 100 + 1.0 / sqrt(2.0);
+  //  }
+  //  else
+  //  {
+  //    accXoffset = accXoffset / 100 - 1.0 / sqrt(2.0);
+  //  }
+
+  //  accXoffset /= 100.0;
+  //  accYoffset /= 100.0;
+  //  accZoffset /= 100.0;
+  //  accZoffset = accZoffset / 100 - 1.0 / sqrt(2.0);
+  gyroXoffset /= 100.0;
+  gyroYoffset /= 100.0;
+  gyroZoffset /= 100.0;
 }
 
 void Gyro::GetRawAngle()
@@ -64,50 +67,63 @@ void Gyro::GetRawAngle()
   accY = ay / 16384.0;
   accZ = az / 16384.0;
 
-//  theta_z = atan2(-1.0 * (accY - accYoffset), (accZ - accZoffset)); // [rad]
-  theta[0] = atan2(-1.0 * (accX - accXoffset), (accZ - accZoffset)); // center
-  theta[1] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(M_PI / 4.0) + (accZ - accZoffset) * cos(M_PI / 4.0)) - M_PI / 4.0; // left
-  theta[2] = atan2(accY - accYoffset , -(accX - accXoffset) * sin(-M_PI / 4.0) + (accZ - accZoffset) * cos(-M_PI / 4.0)) - M_PI / 4.0; //right
+  theta[0] = atan2(accY, sqrt(accX * accX + accZ * accZ)); // x
+  theta[1] = atan2(accX, sqrt(accY * accY + accZ * accZ)); // y
+  
+
+  //  theta[0] = atan2(-1.0 * accX, accZ);                                        // center
+  //  theta[1] = atan2(accY, -accX * sin(M_PI / 4.0) + accZ * cos(M_PI / 4.0));   // left
+  //  theta[2] = atan2(accY, -accX * sin(-M_PI / 4.0) + accZ * cos(-M_PI / 4.0)); // right
 }
 
 void Gyro::GetRawGyro()
 {
   mpu.getRotation(&gx, &gy, &gz);
-  gyroX = gx / 131.072;
-  gyroY = gy / 131.072;
-  gyroZ = gz / 131.072;
+  gyroX = gx / 131.072 - gyroXoffset;
+  gyroY = gy / 131.072 - gyroYoffset;
+  gyroZ = gz / 131.072 - gyroZoffset;
 
-//  dot_theta_z = (gyroZ - gyroZoffset) * M_PI / 180; // [rad/s]
-  dot_theta[0] = (gyroY - gyroYoffset) * M_PI / 180; // center
-  dot_theta[1] = (gyroX - gyroXoffset + (gyroZ - gyroZoffset)) * M_PI / 180; // left
-  dot_theta[2] = (gyroX - gyroXoffset - (gyroZ - gyroZoffset)) * M_PI / 180; // right
+  dot_theta[0] = gyroX * M_PI / 180.0; // x
+  dot_theta[1] = gyroY * M_PI / 180.0; // y
+  dot_theta[2] = gyroZ * M_PI / 180.0; // z
+
+  //  dot_theta[0] = gyroY * M_PI / 180.0;          // center
+  //  dot_theta[1] = gyroX + gyroZ) * M_PI / 180.0; // left
+  //  dot_theta[2] = gyroX - gyroZ) * M_PI / 180.0; // right
 }
 
 void Gyro::KalmanInit()
 {
   // set initial angle
-//  kalmanZ.setAngle(theta_z);
   kalmanC.setAngle(theta[0]);
   kalmanL.setAngle(theta[1]);
-  kalmanR.setAngle(theta[2]);
+  //  kalmanR.setAngle(theta[2]);
 }
 
-std::array<float, 3>  Gyro::GetEstAngle(float dt)
+std::array<float, 3> Gyro::GetEstAngle(float dt)
 {
-//  theta_z_est = kalmanZ.getAngle(theta_z, dot_theta_z, dt);
-  theta_est[0] = kalmanC.getAngle(theta[0], dot_theta[0], dt); // center
-  theta_est[1] = kalmanL.getAngle(theta[1], dot_theta[1], dt); // left
-  theta_est[2] = kalmanR.getAngle(theta[2], dot_theta[2], dt); // right
+  GetRawAngle();
+  GetRawGyro();
+
+  theta_est[0] = kalmanC.getAngle(theta[0], dot_theta[0], dt); // x
+  theta_est[1] = kalmanL.getAngle(theta[1], dot_theta[1], dt); // y
+  //  theta_est[2] = kalmanR.getAngle(theta[2], dot_theta[2], dt);
 
   return theta_est;
 }
 
-std::array<float, 3>  Gyro::GetEstGyro()
+std::array<float, 3> Gyro::GetEstGyro()
 {
-//  dot_theta_z_est = kalmanZ.getRate();
-  dot_theta_est[0] = kalmanC.getRate(); // center
-  dot_theta_est[1] = kalmanL.getRate(); // left
-  dot_theta_est[2] = kalmanR.getRate(); // right
+  dot_theta_est[0] = kalmanC.getRate();
+  dot_theta_est[1] = kalmanL.getRate();
+  dot_theta_est[2] = dot_theta[2];
+  //  dot_theta_est[2] = kalmanR.getRate();
 
   return dot_theta_est;
+}
+
+void Gyro::ExecuteLogger() {
+  Serial.print(theta[0]);
+  Serial.print(",");
+  Serial.println(dot_theta[0]);
 }
