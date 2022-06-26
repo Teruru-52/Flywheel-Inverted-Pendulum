@@ -1,32 +1,40 @@
 #include "display.hpp"
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, OLED_RESET);
+
+extern int tuning_mode;
 extern std::array<float, 3> theta;
+extern std::array<float, 3> dot_theta;
+extern std::array<int16_t, 3> input;
+extern std::array<float, 3> gain;
 extern int Mode;
 
-void DispInit() {
+void DispInit()
+{
   xTaskCreatePinnedToCore(
-    Disp
-    ,  "Disp"   // A name just for humans
-    ,  4096  // This stack size can be checked & adjusted by reading the Stack Highwater
-    ,  NULL
-    ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    ,  NULL
-    ,  0);
+      Disp, "Disp" // A name just for humans
+      ,
+      4096 // This stack size can be checked & adjusted by reading the Stack Highwater
+      ,
+      NULL, 1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+      ,
+      NULL, 0);
 }
 
-void Disp(void *pvParameters) {
-  Wire1.begin(0, 15); //SDA,SCL
+void Disp(void *pvParameters)
+{
+  Wire1.begin(0, 15); // SDA,SCL
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
   // Clear the buffer
   display.clearDisplay();
 
-  for (;;) {
+  for (;;)
+  {
     disableCore0WDT();
 
-    display.setTextSize(1);             // Normal 1:1 pixel scale
-    display.setTextColor(SSD1306_WHITE);        // Draw white text
+    display.setTextSize(1);              // Normal 1:1 pixel scale
+    display.setTextColor(SSD1306_WHITE); // Draw white text
 
     display.setCursor(0, 0);
     display.println(theta[0], 2);
@@ -36,41 +44,53 @@ void Disp(void *pvParameters) {
     //    display.println(theta[2], 2);
 
     display.setCursor(0, 9);
-    display.println(input[0]);
+    display.println(dot_theta[0], 2);
     display.setCursor(50, 9);
-    display.println(input[1]);
+    display.println(dot_theta[1], 2);
     display.setCursor(90, 9);
-    display.println(input[2]);
+    display.println(dot_theta[2], 2);
 
     display.setCursor(0, 18);
-    display.println(gain[0]);
+    display.println(input[0]);
     display.setCursor(50, 18);
-    display.println(gain[1]);
+    display.println(input[1]);
     display.setCursor(90, 18);
-    display.println(gain[2]);
+    display.println(input[2]);
 
     display.setCursor(0, 27);
+    display.println(gain[0]);
+    display.setCursor(50, 27);
+    display.println(gain[1]);
+    display.setCursor(90, 27);
+    display.println(gain[2]);
+
+    display.setCursor(0, 36);
     if (tuning_mode == 0)
       display.println("Tuning kp");
     else if (tuning_mode == 1)
       display.println("Tuning ki");
-    else display.println("Tuning kd");
+    else
+      display.println("Tuning kd");
 
-
-    display.setCursor(0, 36);
-    if (Mode == 0) {
+    display.setCursor(0, 45);
+    if (Mode == 0)
+    {
       display.println("Select Mode");
     }
-    else if (Mode == 1) {
+    else if (Mode == 1)
+    {
       display.println("Side inverted C");
     }
-    else if (Mode == 2) {
+    else if (Mode == 2)
+    {
       display.println("Side inverted L");
     }
-    else if (Mode == 3) {
+    else if (Mode == 3)
+    {
       display.println("Side inverted R");
     }
-    else if (Mode == 4) {
+    else if (Mode == 4)
+    {
       display.println("Point inverted");
     }
     display.print("Mode ");
