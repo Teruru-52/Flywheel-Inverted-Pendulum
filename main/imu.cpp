@@ -1,6 +1,6 @@
-#include "gyro.hpp"
+#include "imu.hpp"
 
-void Gyro::GyroInit()
+void IMU::Init()
 {
   // initialize device
   Serial.println("Initializing I2C devices...");
@@ -18,7 +18,7 @@ void Gyro::GyroInit()
   mpu.setZGyroOffset(60);
 }
 
-void Gyro::OffsetCalc()
+void IMU::OffsetCalc()
 {
   delay(700);
 
@@ -60,39 +60,38 @@ void Gyro::OffsetCalc()
   gyroZoffset /= 100.0;
 }
 
-void Gyro::GetRawAngle()
+void IMU::GetRawAngle()
 {
   mpu.getAcceleration(&ax, &ay, &az);
   accX = ax / 16384.0;
   accY = ay / 16384.0;
   accZ = az / 16384.0;
 
-  theta[0] = atan2(accY, sqrt(accX * accX + accZ * accZ)); // x
-  theta[1] = atan2(accX, sqrt(accY * accY + accZ * accZ)); // y
-  
+  theta[0] = -atan2(accY, sqrt(accX * accX + accZ * accZ)); // x
+  theta[1] = atan2(accX, sqrt(accY * accY + accZ * accZ));  // y
 
   //  theta[0] = atan2(-1.0 * accX, accZ);                                        // center
   //  theta[1] = atan2(accY, -accX * sin(M_PI / 4.0) + accZ * cos(M_PI / 4.0));   // left
   //  theta[2] = atan2(accY, -accX * sin(-M_PI / 4.0) + accZ * cos(-M_PI / 4.0)); // right
 }
 
-void Gyro::GetRawGyro()
+void IMU::GetRawGyro()
 {
   mpu.getRotation(&gx, &gy, &gz);
   gyroX = gx / 131.072 - gyroXoffset;
   gyroY = gy / 131.072 - gyroYoffset;
   gyroZ = gz / 131.072 - gyroZoffset;
 
-  dot_theta[0] = gyroX * M_PI / 180.0; // x
-  dot_theta[1] = gyroY * M_PI / 180.0; // y
-  dot_theta[2] = gyroZ * M_PI / 180.0; // z
+  dot_theta[0] = -gyroX * M_PI / 180.0; // x
+  dot_theta[1] = -gyroY * M_PI / 180.0; // y
+  dot_theta[2] = gyroZ * M_PI / 180.0;  // z
 
   //  dot_theta[0] = gyroY * M_PI / 180.0;          // center
   //  dot_theta[1] = gyroX + gyroZ) * M_PI / 180.0; // left
   //  dot_theta[2] = gyroX - gyroZ) * M_PI / 180.0; // right
 }
 
-void Gyro::KalmanInit()
+void IMU::KalmanInit()
 {
   // set initial angle
   kalmanC.setAngle(theta[0]);
@@ -100,7 +99,7 @@ void Gyro::KalmanInit()
   //  kalmanR.setAngle(theta[2]);
 }
 
-std::array<float, 3> Gyro::GetEstAngle(float dt)
+std::array<float, 3> IMU::GetEstAngle(float dt)
 {
   GetRawAngle();
   GetRawGyro();
@@ -112,7 +111,7 @@ std::array<float, 3> Gyro::GetEstAngle(float dt)
   return theta_est;
 }
 
-std::array<float, 3> Gyro::GetEstGyro()
+std::array<float, 3> IMU::GetEstGyro()
 {
   dot_theta_est[0] = kalmanC.getRate();
   dot_theta_est[1] = kalmanL.getRate();
@@ -120,10 +119,4 @@ std::array<float, 3> Gyro::GetEstGyro()
   //  dot_theta_est[2] = kalmanR.getRate();
 
   return dot_theta_est;
-}
-
-void Gyro::ExecuteLogger() {
-  Serial.print(theta[0]);
-  Serial.print(",");
-  Serial.println(dot_theta[0]);
 }

@@ -1,9 +1,10 @@
 #include "wheel.hpp"
+#include "Arduino.h"
 
 Wheels::Wheels()
-  : enc_l(ENCL_A, ENCL_B),
-    enc_r(ENCR_A, ENCR_B),
-    enc_c(ENCC_A, ENCC_B) {}
+    : enc_l(ENCL_A, ENCL_B),
+      enc_r(ENCR_A, ENCR_B),
+      enc_c(ENCC_A, ENCC_B) {}
 
 void Wheels::SetUpWheel()
 {
@@ -32,20 +33,20 @@ void Wheels::SetUpWheel()
   ledcWrite(CHANNEL_R, 255);
 }
 
-void Wheels::EncoderReadL()
-{
-  enc_l.EncoderRead();
-}
+// void Wheels::EncoderReadL()
+// {
+//   enc_l.EncoderRead();
+// }
 
-void Wheels::EncoderReadR()
-{
-  enc_r.EncoderRead();
-}
+// void Wheels::EncoderReadR()
+// {
+//   enc_r.EncoderRead();
+// }
 
-void Wheels::EncoderReadC()
-{
-  enc_c.EncoderRead();
-}
+// void Wheels::EncoderReadC()
+// {
+//   enc_c.EncoderRead();
+// }
 
 std::array<float, 3> Wheels::GetWheelVelocity(float dt)
 {
@@ -60,13 +61,13 @@ std::array<float, 3> Wheels::GetWheelVelocity(float dt)
 }
 
 WheelsController::WheelsController(float kp, float ki, float kd)
-  : kp(kp),
-    ki(ki),
-    kd(kd),
-    error_X(0),
-    error_Y(0),
-    motor_speed_X(0),
-    motor_speed_Y(0) {}
+    : kp(kp),
+      ki(ki),
+      kd(kd),
+      error_X(0),
+      error_Y(0),
+      motor_speed_X(0),
+      motor_speed_Y(0) {}
 
 void WheelsController::Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega)
 {
@@ -103,7 +104,8 @@ void WheelsController::Invert_side_R(std::array<float, 3> theta, std::array<floa
 
 void WheelsController::Invert_point(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega)
 {
-  if (abs(theta[0]) < 0.174 && abs(theta[1]) < 0.174) {
+  if (abs(theta[0]) < 0.174 && abs(theta[1]) < 0.174)
+  {
     pwm_X = constrain(kp * theta[0] + ki * dot_theta[0] + kd * motor_speed_X, -255, 255);
     pwm_Y = constrain(kp * theta[1] + ki * dot_theta[1] + kd * motor_speed_Y, -255, 255);
     motor_speed_X += pwm_X;
@@ -114,10 +116,11 @@ void WheelsController::Invert_point(std::array<float, 3> theta, std::array<float
     input_R = constrain(round(0.5 * pwm_X + 0.75 * pwm_Y), -255, 255);
 
     WheelDrive_C(input_C);
-//    WheelDrive_L(input_L);
-//    WheelDrive_R(input_R);
+    //    WheelDrive_L(input_L);
+    //    WheelDrive_R(input_R);
   }
-  else {
+  else
+  {
     WheelBrakeOff();
     pwm_X = 0;
     pwm_Y = 0;
@@ -177,7 +180,7 @@ void WheelsController::WheelDrive_R(int input)
   // Serial.println(input);
 }
 
-void WheelsController::PID_tuning(int tuning_mode)
+void WheelsController::PID_Tuning(int tuning_mode)
 {
   if (tuning_mode == 0)
   {
@@ -207,33 +210,44 @@ void WheelsController::PID_tuning(int tuning_mode)
   Serial.println(kd);
 }
 
-void WheelsController::WheelBrakeOn() {
+void WheelsController::WheelBrakeOn()
+{
   digitalWrite(BRAKE_C, HIGH);
   digitalWrite(BRAKE_L, HIGH);
   digitalWrite(BRAKE_R, HIGH);
 }
 
-void WheelsController::WheelBrakeOff() {
+void WheelsController::WheelBrakeOff()
+{
   digitalWrite(BRAKE_C, LOW);
   digitalWrite(BRAKE_L, LOW);
   digitalWrite(BRAKE_R, LOW);
 }
 
-void WheelsController::TestControl(int Mode)
+void WheelsController::TestControl()
 {
-  WheelBrakeOn();
+  WheelBrakeOff();
   WheelDrive_C(50);
   WheelDrive_L(50);
   WheelDrive_R(50);
   delay(2000);
+  WheelBrakeOn();
+  delay(2000);
   WheelBrakeOff();
+  WheelDrive_C(-50);
+  WheelDrive_L(-50);
+  WheelDrive_R(-50);
+  delay(2000);
+  WheelBrakeOn();
   delay(2000);
 }
 
-std::array<int16_t, 3> WheelsController::GetInput(){
+std::array<int16_t, 3> WheelsController::GetInput()
+{
   return {input_C, input_L, input_R};
 }
 
-std::array<float, 3> WheelsController::GetGain(){
+std::array<float, 3> WheelsController::GetGain()
+{
   return {kp, ki, kd};
 }

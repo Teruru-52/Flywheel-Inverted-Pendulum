@@ -4,7 +4,7 @@
 #include "mpu6050.hpp"
 #include "kalman.hpp"
 
-class Gyro
+class IMU
 {
 private:
     MPU6050 mpu;
@@ -26,14 +26,13 @@ private:
     std::array<float, 3> dot_theta_est;
 
 public:
-    void GyroInit();
+    void Init();
     void OffsetCalc();
     void GetRawAngle();
     void GetRawGyro();
     void KalmanInit();
     std::array<float, 3> GetEstAngle(float dt);
     std::array<float, 3> GetEstGyro();
-    void ExecuteLogger();
 };
 
 #endif // _GYRO_HPP_
