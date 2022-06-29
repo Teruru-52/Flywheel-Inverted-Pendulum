@@ -25,36 +25,16 @@ void IMU::OffsetCalc()
   for (int i = 0; i < 100; i++)
   {
     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    //    accX = ax / 16384.0;
-    //    accY = ay / 16384.0;
-    //    accZ = az / 16384.0;
     gyroX = gx / 131.072;
     gyroY = gy / 131.072;
     gyroZ = gz / 131.072;
 
-    //    accXoffset += accX;
-    //    accYoffset += accY;
-    //    accZoffset += accZ;
     gyroXoffset += gyroX;
     gyroYoffset += gyroY;
     gyroZoffset += gyroZ;
 
     delay(10);
   }
-
-  //  if (accXoffset < 0)
-  //  {
-  //    accXoffset = accXoffset / 100 + 1.0 / sqrt(2.0);
-  //  }
-  //  else
-  //  {
-  //    accXoffset = accXoffset / 100 - 1.0 / sqrt(2.0);
-  //  }
-
-  //  accXoffset /= 100.0;
-  //  accYoffset /= 100.0;
-  //  accZoffset /= 100.0;
-  //  accZoffset = accZoffset / 100 - 1.0 / sqrt(2.0);
   gyroXoffset /= 100.0;
   gyroYoffset /= 100.0;
   gyroZoffset /= 100.0;
@@ -71,10 +51,6 @@ void IMU::GetRawAngle()
 
   theta[0] = -atan2(accY, sqrt(accX * accX + accZ * accZ)); // x
   theta[1] = atan2(accX, sqrt(accY * accY + accZ * accZ));  // y
-
-  //  theta[0] = atan2(-1.0 * accX, accZ);                                        // center
-  //  theta[1] = atan2(accY, -accX * sin(M_PI / 4.0) + accZ * cos(M_PI / 4.0));   // left
-  //  theta[2] = atan2(accY, -accX * sin(-M_PI / 4.0) + accZ * cos(-M_PI / 4.0)); // right
 }
 
 void IMU::GetRawGyro()
@@ -87,10 +63,6 @@ void IMU::GetRawGyro()
   dot_theta[0] = -gyroX * M_PI / 180.0; // x
   dot_theta[1] = -gyroY * M_PI / 180.0; // y
   dot_theta[2] = gyroZ * M_PI / 180.0;  // z
-
-  //  dot_theta[0] = gyroY * M_PI / 180.0;          // center
-  //  dot_theta[1] = gyroX + gyroZ) * M_PI / 180.0; // left
-  //  dot_theta[2] = gyroX - gyroZ) * M_PI / 180.0; // right
 }
 
 void IMU::KalmanInit()

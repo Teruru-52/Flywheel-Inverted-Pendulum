@@ -17,7 +17,7 @@ std::array<float, 3> input;
 std::array<float, 3> gain;
 
 IMU imu;
-WheelsController controller(1.0, 0.0, 0.0); // kp, ki, kd
+WheelsController controller(8.6, 0.95, 0.033); // kp, ki, kd
 
 void setup()
 {
@@ -30,7 +30,7 @@ void setup()
   // attachInterrupt(RESET_PIN, Reset, FALLING);
   // attachInterrupt(MODE_PIN, SelectInvertMode, FALLING);
 
-  // PID Tuning
+  // manualy tune PID gains
   attachInterrupt(MODE_PIN, SelectTuningMode, FALLING);
 
   DispInit();
@@ -52,13 +52,15 @@ void loop()
   input = controller.GetInput();
   gain = controller.GetGain();
 
+  // manualy tune PID gains
   if (digitalRead(RESET_PIN) == LOW)
   {
     PID_Tuning();
   }
 
-  controller.TestDrive();
-  // controller.Invert_point(theta, dot_theta);
+  // controller.TestDrive();
+  controller.Invert_point(theta, dot_theta);
+  delay(8);
 
   // side inverted
   //  if (invert_mode == 1)
@@ -77,7 +79,7 @@ void loop()
   //  if (invert_mode == 4)
   //  {
   // point inverted
-  //    controller.Invert_point(theta, dot_theta, omega);
+  //    controller.Invert_point(theta, dot_theta);
   //  }
 }
 

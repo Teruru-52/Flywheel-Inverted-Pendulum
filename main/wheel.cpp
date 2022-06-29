@@ -191,13 +191,13 @@ void WheelsController::PID_Tuning(int tuning_mode)
   if (tuning_mode == 1)
   {
     ki += 0.01;
-    if (ki > 15)
+    if (ki > 10)
       ki = 0;
   }
   if (tuning_mode == 2)
   {
-    kd += 0.0001;
-    if (kd > 10)
+    kd += 0.001;
+    if (kd > 1.0)
       kd = 0;
   }
 }
