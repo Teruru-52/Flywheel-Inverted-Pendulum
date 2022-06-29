@@ -2,12 +2,13 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, OLED_RESET);
 
+extern float dt;
+extern int invert_mode;
 extern int tuning_mode;
 extern std::array<float, 3> theta;
 extern std::array<float, 3> dot_theta;
-extern std::array<int16_t, 3> input;
+extern std::array<float, 3> input;
 extern std::array<float, 3> gain;
-extern int Mode;
 
 void DispInit()
 {
@@ -40,8 +41,8 @@ void Disp(void *pvParameters)
     display.println(theta[0], 2);
     display.setCursor(50, 0);
     display.println(theta[1], 2);
-    //    display.setCursor(90, 0);
-    //    display.println(theta[2], 2);
+    display.setCursor(90, 0);
+    display.println(dt, 3);
 
     display.setCursor(0, 9);
     display.println(dot_theta[0], 2);
@@ -51,18 +52,18 @@ void Disp(void *pvParameters)
     display.println(dot_theta[2], 2);
 
     display.setCursor(0, 18);
-    display.println(input[0]);
+    display.println(input[1], 2); // input_L
     display.setCursor(50, 18);
-    display.println(input[1]);
+    display.println(input[0], 2); // input_C
     display.setCursor(90, 18);
-    display.println(input[2]);
+    display.println(input[2], 2); // input_R
 
     display.setCursor(0, 27);
-    display.println(gain[0]);
+    display.println(gain[0], 2);
     display.setCursor(50, 27);
-    display.println(gain[1]);
+    display.println(gain[1], 2);
     display.setCursor(90, 27);
-    display.println(gain[2]);
+    display.println(gain[2], 4);
 
     display.setCursor(0, 36);
     if (tuning_mode == 0)
@@ -73,28 +74,28 @@ void Disp(void *pvParameters)
       display.println("Tuning kd");
 
     display.setCursor(0, 45);
-    if (Mode == 0)
+    if (invert_mode == 0)
     {
-      display.println("Select Mode");
+      display.println("Select Invert Mode");
     }
-    else if (Mode == 1)
+    else if (invert_mode == 1)
     {
       display.println("Side inverted C");
     }
-    else if (Mode == 2)
+    else if (invert_mode == 2)
     {
       display.println("Side inverted L");
     }
-    else if (Mode == 3)
+    else if (invert_mode == 3)
     {
       display.println("Side inverted R");
     }
-    else if (Mode == 4)
+    else if (invert_mode == 4)
     {
       display.println("Point inverted");
     }
-    display.print("Mode ");
-    display.println(Mode);
+    display.print("Invert Mode ");
+    display.println(invert_mode);
 
     //    int LineC = map(theta[0] * 180 / M_PI, 20, -20, 0, 127);
     //    if (LineC >= 0 && LineC < 128) {

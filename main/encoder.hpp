@@ -12,15 +12,15 @@
 class Encoder
 {
 private:
-    int enc_a, enc_b;
+    uint8_t enc_a, enc_b;
 
 public:
-    Encoder(int enc_a, int enc_b);
+    Encoder(uint8_t enc_a, uint8_t enc_b);
 
     byte pos;
     int count;
 
-    void EncoderRead();
+    void ReadEncoder();
 };
 
 #endif // _ENCODER_HPP_

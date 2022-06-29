@@ -2,7 +2,7 @@
 #define _WHEEL_HPP_
 #include "main.hpp"
 #include "encoder.hpp"
-#include "gyro.hpp"
+#include "imu.hpp"
 
 #define CHANNEL_L 0
 #define CHANNEL_R 1
@@ -22,62 +22,75 @@
 
 class Wheels
 {
-  private:
-    Encoder enc_l;
-    Encoder enc_r;
-    Encoder enc_c;
-    const float angle_limit = 5.0 * M_PI / 180; // [rad]
-    std::array<float, 3> wheel_vel;
-    const float ppr = 100.0;
+private:
+  Encoder enc_l;
+  Encoder enc_r;
+  Encoder enc_c;
+  std::array<float, 3> wheel_vel;
+  const float ppr = 100.0;
 
-  public:
-    Wheels();
+public:
+  Wheels();
 
-    void SetUpWheel();
-    void EncoderReadL();
-    void EncoderReadR();
-    void EncoderReadC();
-    std::array<float, 3> GetWheelVelocity(float dt);
+  void SetUpWheel();
+  void EncoderReadL();
+  void EncoderReadR();
+  void EncoderReadC();
+  std::array<float, 3> GetWheelVelocity(float dt);
 };
 
 class WheelsController
 {
-  private:
-    float kp;
-    float ki;
-    float kd;
-    const float angle_limit = 5.0 * M_PI / 180; // [rad]
-    const float start_angle = 0.1 * M_PI / 180; // [rad]
+private:
+  float kp;
+  float ki;
+  float kd;
+  const float start_angle = 2.0 * M_PI / 180; // [rad]
+  const float limit_angle = 5.0 * M_PI / 180; // [rad]
+  bool flag_control;
+  float limit_input = 1.0;
+  long max_input = 1024;
+  long map_coeff = 1000;
 
-    int pwm_Y;
-    int pwm_X;
-    float error_X;
-    float error_Y;
-    float ref_theta_X1 = 0.0;
-    float ref_theta_Y1 = 0.0;
-    float ref_theta_X4 = 0.0;
-    float ref_theta_Y4 = 0.0;
-    float motor_speed_X;
-    float motor_speed_Y;
-    int16_t input_C;
-    int16_t input_L;
-    int16_t input_R;
+  float input_X;
+  float input_Y;
+  float input_Z;
+  float error_X;
+  float error_Y;
+  float ref_theta_X1 = 0.0;
+  float ref_theta_Y1 = 0.0;
+  float ref_theta_X4 = 0.0;
+  float ref_theta_Y4 = 0.0;
+  float input_sum_X;
+  float input_sum_Y;
+  float input_sum_Z;
+  float input_C;
+  float input_L;
+  float input_R;
+  long pwm_C;
+  long pwm_L;
+  long pwm_R;
 
-  public:
-    WheelsController(float kp, float ki, float kd);
+  const float coeff1 = 0.4082;
+  const float coeff2 = 0.5774;
+  const float coeff3 = 0.7071;
 
-    void Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
-    void Invert_side_L(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
-    void Invert_side_R(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
-    void Invert_point(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
-    void WheelDrive_C(int input);
-    void WheelDrive_L(int input);
-    void WheelDrive_R(int input);
-    void PID_tuning(int tuning_mode);
-    void WheelBrakeOn();
-    void WheelBrakeOff();
-    void TestControl(int Mode);
-    std::array<int16_t, 3> GetInput();
-    std::array<float, 3> GetGain();
+public:
+  WheelsController(float kp, float ki, float kd);
+
+  void Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
+  void Invert_side_L(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
+  void Invert_side_R(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
+  void Invert_point(std::array<float, 3> theta, std::array<float, 3> dot_theta);
+  void WheelDrive_C(float input);
+  void WheelDrive_L(float input);
+  void WheelDrive_R(float input);
+  void ResetInput();
+  void PID_Tuning(int tuning_mode);
+  void WheelBrakeOn();
+  void WheelBrakeOff();
+  void TestControl();
+  std::array<float, 3> GetInput();
+  std::array<float, 3> GetGain();
 };
 #endif // _WHEEL_HPP_

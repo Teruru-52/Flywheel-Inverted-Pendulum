@@ -58,6 +58,8 @@ void IMU::OffsetCalc()
   gyroXoffset /= 100.0;
   gyroYoffset /= 100.0;
   gyroZoffset /= 100.0;
+
+  Serial.println("Finish Offset Calculation");
 }
 
 void IMU::GetRawAngle()
@@ -93,10 +95,12 @@ void IMU::GetRawGyro()
 
 void IMU::KalmanInit()
 {
+  GetRawAngle();
   // set initial angle
   kalmanC.setAngle(theta[0]);
   kalmanL.setAngle(theta[1]);
   //  kalmanR.setAngle(theta[2]);
+  Serial.println("Finish Kalman Filter Initialization");
 }
 
 std::array<float, 3> IMU::GetEstAngle(float dt)

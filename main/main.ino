@@ -1,6 +1,6 @@
 #include "main.hpp"
 #include "wheel.hpp"
-#include "gyro.hpp"
+#include "imu.hpp"
 #include "display.hpp"
 
 #define RESET_PIN 2
@@ -8,30 +8,36 @@
 
 unsigned long nowTime, oldTime;
 float dt;
-int Mode = 4;
+int invert_mode = 4;
 int tuning_mode = 0;
 std::array<float, 3> theta;
 std::array<float, 3> dot_theta;
 std::array<float, 3> omega;
-std::array<int16_t, 3> input;
+std::array<float, 3> input;
 std::array<float, 3> gain;
 
-Gyro imu;
+IMU imu;
 Wheels wheels;
-WheelsController controller(10.0, 10.0, 0.001); // kp, ki, kd
+WheelsController controller(1.0, 0.0, 0.0); // kp, ki, kd
+
 void setup()
 {
+  controller.WheelBrakeOn();
   Wire.begin();
   Serial.begin(115200);
 
   pinMode(RESET_PIN, INPUT_PULLUP);
   pinMode(MODE_PIN, INPUT_PULLUP);
-  attachInterrupt(RESET_PIN, Reset, FALLING);
-//  attachInterrupt(MODE_PIN, ModeOnOff, FALLING);
+  // attachInterrupt(RESET_PIN, Reset, FALLING);
+  // attachInterrupt(MODE_PIN, SelectInvertMode, FALLING);
+
+  // PID Tuning
+  attachInterrupt(MODE_PIN, SelectTuningMode, FALLING);
+
   DispInit();
   wheels.SetUpWheel();
-  SetUpEncoder();
-  imu.GyroInit();
+  // SetUpEncoder();
+  imu.Init();
   imu.OffsetCalc();
   imu.KalmanInit();
 }
@@ -44,101 +50,110 @@ void loop()
 
   theta = imu.GetEstAngle(dt);
   dot_theta = imu.GetEstGyro();
-  omega = wheels.GetWheelVelocity(dt);
+  // omega = wheels.GetWheelVelocity(dt);
   input = controller.GetInput();
   gain = controller.GetGain();
 
   if (digitalRead(RESET_PIN) == LOW)
   {
-    tuning_mode++;
-    if (tuning_mode == 3)
-      tuning_mode = 0;
+    PID_Tuning();
   }
-  if (digitalRead(MODE_PIN) == LOW)
-  {
-    controller.PID_tuning(tuning_mode);
-  }
-  controller.Invert_point(theta, dot_theta, omega);
 
-//    Serial.print(theta[0]);
-//    Serial.print(",");
-//    Serial.println(theta[1]);
-//    Serial.print(",");
-//    Serial.println(omega[2]);
-//   imu.ExecuteLogger();
-//  controller.TestControl(Mode);
+  controller.Invert_point(theta, dot_theta);
+
+  // controller.TestControl();
 
   // side inverted
-//  if (Mode == 1)
-//  {
-//    controller.Invert_side_C(theta, dot_theta, omega);
-//  }
-//  else if (Mode == 2)
-//  {
-//    controller.Invert_side_L(theta, dot_theta, omega);
-//  }
-// else if (Mode == 3)
-//  {
-//    controller.Invert_side_R(theta, dot_theta, omega);
-//  }
-  
-//  if (Mode == 4)
-//  {
-    // point inverted
-//    controller.Invert_point(theta, dot_theta, omega);
-//  }
+  //  if (invert_mode == 1)
+  //  {
+  //    controller.Invert_side_C(theta, dot_theta, omega);
+  //  }
+  //  else if (invert_mode == 2)
+  //  {
+  //    controller.Invert_side_L(theta, dot_theta, omega);
+  //  }
+  // else if (invert_mode == 3)
+  //  {
+  //    controller.Invert_side_R(theta, dot_theta, omega);
+  //  }
+
+  //  if (invert_mode == 4)
+  //  {
+  // point inverted
+  //    controller.Invert_point(theta, dot_theta, omega);
+  //  }
 }
 
-void SetUpEncoder()
+// void SetUpEncoder()
+// {
+// pinMode(ENCC_A, INPUT);
+// pinMode(ENCC_B, INPUT);
+// pinMode(ENCL_A, INPUT);
+// pinMode(ENCL_B, INPUT);
+// pinMode(ENCR_A, INPUT);
+// pinMode(ENCR_B, INPUT);
+
+// attachInterrupt(ENCC_A, ReadEncoderC, CHANGE);
+// attachInterrupt(ENCC_B, ReadEncoderC, CHANGE);
+// attachInterrupt(ENCL_A, ReadEncoderL, CHANGE);
+// attachInterrupt(ENCL_B, ReadEncoderL, CHANGE);
+// attachInterrupt(ENCR_A, ReadEncoderR, CHANGE);
+// attachInterrupt(ENCR_B, ReadEncoderR, CHANGE);
+// }
+
+// void ReadEncoderC()
+// {
+//   wheels.ReadEncoderC();
+// }
+
+// void ReadEncoderL()
+// {
+//   wheels.ReadEncoderL();
+// }
+
+// void ReadEncoderR()
+// {
+//   wheels.EncoderReadR();
+// }
+
+void Reset()
 {
-  pinMode(ENCC_A, INPUT);
-  pinMode(ENCC_B, INPUT);
-  pinMode(ENCL_A, INPUT);
-  pinMode(ENCL_B, INPUT);
-  pinMode(ENCR_A, INPUT);
-  pinMode(ENCR_B, INPUT);
-
-  attachInterrupt(ENCC_A, ReadEncoderC, CHANGE);
-  attachInterrupt(ENCC_B, ReadEncoderC, CHANGE);
-  attachInterrupt(ENCL_A, ReadEncoderL, CHANGE);
-  attachInterrupt(ENCL_B, ReadEncoderL, CHANGE);
-  attachInterrupt(ENCR_A, ReadEncoderR, CHANGE);
-  attachInterrupt(ENCR_B, ReadEncoderR, CHANGE);
+  invert_mode = 0;
 }
 
-void ReadEncoderC()
+void SelectInvertMode()
 {
-  wheels.EncoderReadC();
+  Serial.println("Select Invert Mode");
+  if (invert_mode == 0)
+  {
+    invert_mode = 1;
+  }
+  else if (invert_mode == 1)
+  {
+    invert_mode = 2;
+  }
+  else if (invert_mode == 2)
+  {
+    invert_mode = 3;
+  }
+  else if (invert_mode == 3)
+  {
+    invert_mode = 4;
+  }
+  else if (invert_mode == 4)
+  {
+    invert_mode = 0;
+  }
 }
 
-void ReadEncoderL()
+void SelectTuningMode()
 {
-  wheels.EncoderReadL();
+  tuning_mode++;
+  if (tuning_mode == 3)
+    tuning_mode = 0;
 }
 
-void ReadEncoderR()
+void PID_Tuning()
 {
-  wheels.EncoderReadR();
-}
-
-void Reset() {
-  Mode = 0;
-}
-void ModeOnOff() {
-  Serial.println("ModeOnOff");
-  if (Mode == 0) {
-    Mode = 1;
-  }
-  else if (Mode == 1) {
-    Mode = 2;
-  }
-  else if (Mode == 2) {
-    Mode = 3;
-  }
-  else if (Mode == 3) {
-    Mode = 4;
-  }
-  else if (Mode == 4) {
-    Mode = 0;
-  }
+  controller.PID_Tuning(tuning_mode);
 }
