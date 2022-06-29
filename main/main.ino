@@ -17,7 +17,6 @@ std::array<float, 3> input;
 std::array<float, 3> gain;
 
 IMU imu;
-Wheels wheels;
 WheelsController controller(1.0, 0.0, 0.0); // kp, ki, kd
 
 void setup()
@@ -35,7 +34,6 @@ void setup()
   attachInterrupt(MODE_PIN, SelectTuningMode, FALLING);
 
   DispInit();
-  wheels.SetUpWheel();
   // SetUpEncoder();
   imu.Init();
   imu.OffsetCalc();
@@ -50,7 +48,7 @@ void loop()
 
   theta = imu.GetEstAngle(dt);
   dot_theta = imu.GetEstGyro();
-  // omega = wheels.GetWheelVelocity(dt);
+  // omega = controller.GetWheelVelocity(dt);
   input = controller.GetInput();
   gain = controller.GetGain();
 
@@ -59,9 +57,8 @@ void loop()
     PID_Tuning();
   }
 
-  controller.Invert_point(theta, dot_theta);
-
-  // controller.TestControl();
+  controller.TestDrive();
+  // controller.Invert_point(theta, dot_theta);
 
   // side inverted
   //  if (invert_mode == 1)
@@ -83,38 +80,6 @@ void loop()
   //    controller.Invert_point(theta, dot_theta, omega);
   //  }
 }
-
-// void SetUpEncoder()
-// {
-// pinMode(ENCC_A, INPUT);
-// pinMode(ENCC_B, INPUT);
-// pinMode(ENCL_A, INPUT);
-// pinMode(ENCL_B, INPUT);
-// pinMode(ENCR_A, INPUT);
-// pinMode(ENCR_B, INPUT);
-
-// attachInterrupt(ENCC_A, ReadEncoderC, CHANGE);
-// attachInterrupt(ENCC_B, ReadEncoderC, CHANGE);
-// attachInterrupt(ENCL_A, ReadEncoderL, CHANGE);
-// attachInterrupt(ENCL_B, ReadEncoderL, CHANGE);
-// attachInterrupt(ENCR_A, ReadEncoderR, CHANGE);
-// attachInterrupt(ENCR_B, ReadEncoderR, CHANGE);
-// }
-
-// void ReadEncoderC()
-// {
-//   wheels.ReadEncoderC();
-// }
-
-// void ReadEncoderL()
-// {
-//   wheels.ReadEncoderL();
-// }
-
-// void ReadEncoderR()
-// {
-//   wheels.EncoderReadR();
-// }
 
 void Reset()
 {
@@ -157,3 +122,28 @@ void PID_Tuning()
 {
   controller.PID_Tuning(tuning_mode);
 }
+
+// void SetUpEncoder()
+// {
+//   attachInterrupt(ENCC_A, ReadEncoderC, CHANGE);
+//   attachInterrupt(ENCC_B, ReadEncoderC, CHANGE);
+//   attachInterrupt(ENCL_A, ReadEncoderL, CHANGE);
+//   attachInterrupt(ENCL_B, ReadEncoderL, CHANGE);
+//   attachInterrupt(ENCR_A, ReadEncoderR, CHANGE);
+//   attachInterrupt(ENCR_B, ReadEncoderR, CHANGE);
+// }
+
+// void ReadEncoderC()
+// {
+//   controller.wheel_c.ReadEncoder();
+// }
+
+// void ReadEncoderL()
+// {
+//   controller.wheel_l.ReadEncoder();
+// }
+
+// void ReadEncoderR()
+// {
+//   controller.wheel_r.ReadEncoder();
+// }

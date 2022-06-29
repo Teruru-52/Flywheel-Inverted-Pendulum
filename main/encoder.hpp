@@ -18,7 +18,7 @@ public:
     Encoder(uint8_t enc_a, uint8_t enc_b);
 
     byte pos;
-    int count;
+    float count;
 
     void ReadEncoder();
 };

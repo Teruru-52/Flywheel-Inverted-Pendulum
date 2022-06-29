@@ -3,7 +3,11 @@
 Encoder::Encoder(uint8_t enc_a, uint8_t enc_b)
     : enc_a(enc_a),
       enc_b(enc_b),
-      count(0) {}
+      count(0)
+{
+  pinMode(enc_a, INPUT);
+  pinMode(enc_b, INPUT);
+}
 
 void Encoder::ReadEncoder()
 {
