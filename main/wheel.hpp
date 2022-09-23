@@ -51,7 +51,7 @@ private:
   float kp;
   float ki;
   float kd;
-  const float start_angle = 2.0 * M_PI / 180; // [rad]
+  const float start_angle = 1.0 * M_PI / 180; // [rad]
   const float limit_angle = 5.0 * M_PI / 180; // [rad]
   bool flag_control;
   float limit_input = 1.0;

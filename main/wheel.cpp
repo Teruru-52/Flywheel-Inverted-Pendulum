@@ -140,7 +140,7 @@ void WheelsController::Invert_point(std::array<float, 3> theta, std::array<float
     {
       input_X = kp * theta[0] + ki * dot_theta[0] + kd * input_sum_X;
       input_Y = kp * theta[1] + ki * dot_theta[1] + kd * input_sum_Y;
-      // input_Z = ki * dot_theta[2] + kd * input_sum_Z;
+      input_Z = ki * dot_theta[2] + kd * input_sum_Z;
       input_Z = 0;
 
       input_sum_X += input_X;

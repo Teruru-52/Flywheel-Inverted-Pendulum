@@ -17,7 +17,7 @@ std::array<float, 3> input;
 std::array<float, 3> gain;
 
 IMU imu;
-WheelsController controller(8.6, 0.95, 0.033); // kp, ki, kd
+WheelsController controller(9.5, 0.95, 0.033); // kp, ki, kd
 
 void setup()
 {
