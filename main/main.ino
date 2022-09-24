@@ -8,7 +8,7 @@
 
 unsigned long nowTime, oldTime;
 float dt;
-int invert_mode = 4;
+int invert_mode = 1;
 int tuning_mode = 0;
 std::array<float, 3> theta;
 std::array<float, 3> dot_theta;
@@ -17,7 +17,7 @@ std::array<float, 3> input;
 std::array<float, 6> gain;
 
 IMU imu;
-WheelsController controller(9.5, 0.95, 0.033, 11.5, 2.66, 0.02); // kp, ki, kd. kp_side, ki_side, kd_side
+WheelsController controller(9.5, 0.95, 0.033, 9.94, 2.0, 0.02); // kp, ki, kd. kp_side, ki_side, kd_side
 
 void setup()
 {
