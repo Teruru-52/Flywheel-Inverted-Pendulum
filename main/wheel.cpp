@@ -70,7 +70,7 @@ void Wheel::BrakeOn()
   digitalWrite(brake, LOW);
 }
 
-WheelsController::WheelsController(float kp, float ki, float kd)
+WheelsController::WheelsController(float kp, float ki, float kd, float kp_side, float ki_side, float kd_side)
     : wheel_c(ENCC_A, ENCC_B, BRAKE_C, DIR_C, CHANNEL_C, PWM_PIN_C),
       wheel_l(ENCL_A, ENCL_B, BRAKE_L, DIR_L, CHANNEL_L, PWM_PIN_L),
       wheel_r(ENCR_A, ENCR_B, BRAKE_R, DIR_R, CHANNEL_R, PWM_PIN_R),
@@ -78,6 +78,9 @@ WheelsController::WheelsController(float kp, float ki, float kd)
       kp(kp),
       ki(ki),
       kd(kd),
+      kp_side(kp_side),
+      ki_side(ki_side),
+      kd_side(kd_side),
       error_X(0),
       error_Y(0),
       input_sum_X(0),
@@ -92,21 +95,40 @@ std::array<float, 3> WheelsController::GetWheelVelocity(float dt)
 
   return wheel_vels;
 }
-// void WheelsController::Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega)
-// {
-//   error_X = ref_theta_X1 - theta[0];
-//   input_X = constrain(kp * error_X + ki * dot_theta[2] + kd * omega[0], -255, 255);
 
-//   if (abs(error_X) <= limit_angle)
-//     WheelDrive_C(input_X);
-//   else
-//     WheelDrive_C(0);
-// }
+void WheelsController::Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta)
+{
+  if (abs(theta[0]) < start_angle && flag_control == false)
+  {
+    flag_control = true;
+    Serial.println("Start Side Invert C");
+    WheelBrakeOff();
+  }
+
+  if (flag_control == true)
+  {
+    if (abs(theta[0]) < limit_angle)
+    {
+      input_X = kp_side * theta[0] + ki_side * dot_theta[0] + kd_side * input_sum_X;
+      input_sum_X += input_X;
+
+      input_C = constrain(input_X, -limit_input, limit_input);
+      wheel_c.Drive(input_C);
+    }
+    else
+    {
+      flag_control = false;
+      Serial.println("Stop Point Invert C");
+      WheelBrakeOn();
+      ResetInput();
+    }
+  }
+}
 
 // void WheelsController::Invert_side_L(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega)
 // {
 //   error_Y = ref_theta_Y1 - theta[1];
-//   input_Y = constrain(kp * error_Y + ki * dot_theta[1] + kd * omega[1], -255, 255);
+//   input_Y = constrain(kp * error_Y + ki * dot_theta[1] + kd * omega[1], -limit_input, limit_input);
 
 //   if (abs(error_Y) <= limit_angle)
 //     WheelDrive_L(input_Y);
@@ -117,7 +139,7 @@ std::array<float, 3> WheelsController::GetWheelVelocity(float dt)
 // void WheelsController::Invert_side_R(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega)
 // {
 //   error_Y = ref_theta_Y1 - theta[1];
-//   input_Y = constrain(kp * error_Y + ki * dot_theta[1] + kd * omega[1], -255, 255);
+//   input_Y = constrain(kp * error_Y + ki * dot_theta[1] + kd * omega[1], -limit_input, limit_input);
 
 //   if (abs(error_Y) <= limit_angle)
 //     WheelDrive_R(-input_Y);
@@ -180,25 +202,52 @@ void WheelsController::ResetInput()
   input_R = 0;
 }
 
-void WheelsController::PID_Tuning(int tuning_mode)
+void WheelsController::PID_Tuning(int tuning_mode, int invert_mode)
 {
   if (tuning_mode == 0)
   {
-    kp += 0.01;
-    if (kp > 15)
-      kp = 0;
+    if (invert_mode == 4)
+    {
+      kp += 0.02;
+      if (kp > 15)
+        kp = 0;
+    }
+    else
+    {
+      kp_side += 0.02;
+      if (kp_side > 15)
+        kp_side = 0;
+    }
   }
   if (tuning_mode == 1)
   {
-    ki += 0.01;
-    if (ki > 10)
-      ki = 0;
+    if (invert_mode == 4)
+    {
+      ki += 0.01;
+      if (ki > 5)
+        ki = 0;
+    }
+    else
+    {
+      ki_side += 0.01;
+      if (ki_side > 5)
+        ki_side = 0;
+    }
   }
   if (tuning_mode == 2)
   {
-    kd += 0.001;
-    if (kd > 1.0)
-      kd = 0;
+    if (invert_mode == 4)
+    {
+      kd += 0.01;
+      if (kd > 1.0)
+        kd = 0;
+    }
+    else
+    {
+      kd_side += 0.01;
+      if (kd_side > 1.0)
+        kd_side = 0;
+    }
   }
 }
 
@@ -242,7 +291,7 @@ std::array<float, 3> WheelsController::GetInput()
   // return {input_X, input_Y, input_Z};
 }
 
-std::array<float, 3> WheelsController::GetGain()
+std::array<float, 6> WheelsController::GetGain()
 {
-  return {kp, ki, kd};
+  return {kp, ki, kd, kp_side, ki_side, kd_side};
 }

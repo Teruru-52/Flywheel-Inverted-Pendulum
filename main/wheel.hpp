@@ -51,8 +51,11 @@ private:
   float kp;
   float ki;
   float kd;
-  const float start_angle = 1.0 * M_PI / 180; // [rad]
-  const float limit_angle = 5.0 * M_PI / 180; // [rad]
+  float kp_side;
+  float ki_side;
+  float kd_side;
+  const float start_angle = 1.0 * M_PI / 180;  // [rad]
+  const float limit_angle = 10.0 * M_PI / 180; // [rad]
   bool flag_control;
   float limit_input = 1.0;
 
@@ -62,10 +65,10 @@ private:
   float input_Z;
   float error_X;
   float error_Y;
-  float ref_theta_X1 = 0.0;
-  float ref_theta_Y1 = 0.0;
-  float ref_theta_X4 = 0.0;
-  float ref_theta_Y4 = 0.0;
+  // float ref_theta_X1 = 0.0;
+  // float ref_theta_Y1 = 0.0;
+  // float ref_theta_X4 = 0.0;
+  // float ref_theta_Y4 = 0.0;
   float input_sum_X;
   float input_sum_Y;
   float input_sum_Z;
@@ -81,19 +84,19 @@ public:
   Wheel wheel_c;
   Wheel wheel_l;
   Wheel wheel_r;
-  WheelsController(float kp, float ki, float kd);
+  WheelsController(float kp, float ki, float kd, float kp_side, float ki_side, float kd_side);
 
   std::array<float, 3> GetWheelVelocity(float dt);
-  void Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
-  void Invert_side_L(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
-  void Invert_side_R(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
+  void Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta);
+  // void Invert_side_L(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
+  // void Invert_side_R(std::array<float, 3> theta, std::array<float, 3> dot_theta, std::array<float, 3> omega);
   void Invert_point(std::array<float, 3> theta, std::array<float, 3> dot_theta);
   void ResetInput();
-  void PID_Tuning(int tuning_mode);
+  void PID_Tuning(int tuning_mode, int invert_mode);
   void WheelBrakeOn();
   void WheelBrakeOff();
   void TestDrive();
   std::array<float, 3> GetInput();
-  std::array<float, 3> GetGain();
+  std::array<float, 6> GetGain();
 };
 #endif // _WHEEL_HPP_

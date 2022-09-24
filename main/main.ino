@@ -14,10 +14,10 @@ std::array<float, 3> theta;
 std::array<float, 3> dot_theta;
 std::array<float, 3> omega;
 std::array<float, 3> input;
-std::array<float, 3> gain;
+std::array<float, 6> gain;
 
 IMU imu;
-WheelsController controller(9.5, 0.95, 0.033); // kp, ki, kd
+WheelsController controller(9.5, 0.95, 0.033, 11.5, 2.66, 0.02); // kp, ki, kd. kp_side, ki_side, kd_side
 
 void setup()
 {
@@ -59,14 +59,12 @@ void loop()
   }
 
   // controller.TestDrive();
-  controller.Invert_point(theta, dot_theta);
-  delay(8);
 
   // side inverted
-  //  if (invert_mode == 1)
-  //  {
-  //    controller.Invert_side_C(theta, dot_theta, omega);
-  //  }
+  if (invert_mode == 1)
+  {
+    controller.Invert_side_C(theta, dot_theta);
+  }
   //  else if (invert_mode == 2)
   //  {
   //    controller.Invert_side_L(theta, dot_theta, omega);
@@ -76,11 +74,12 @@ void loop()
   //    controller.Invert_side_R(theta, dot_theta, omega);
   //  }
 
-  //  if (invert_mode == 4)
-  //  {
   // point inverted
-  //    controller.Invert_point(theta, dot_theta);
-  //  }
+  else if (invert_mode == 4)
+  {
+    controller.Invert_point(theta, dot_theta);
+  }
+  delay(8);
 }
 
 void Reset()
@@ -122,7 +121,7 @@ void SelectTuningMode()
 
 void PID_Tuning()
 {
-  controller.PID_Tuning(tuning_mode);
+  controller.PID_Tuning(tuning_mode, invert_mode);
 }
 
 // void SetUpEncoder()

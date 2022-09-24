@@ -8,7 +8,7 @@ extern int tuning_mode;
 extern std::array<float, 3> theta;
 extern std::array<float, 3> dot_theta;
 extern std::array<float, 3> input;
-extern std::array<float, 3> gain;
+extern std::array<float, 6> gain;
 
 void DispInit()
 {
@@ -58,12 +58,24 @@ void Disp(void *pvParameters)
     display.setCursor(90, 18);
     display.println(input[2], 2); // input_R
 
-    display.setCursor(0, 27);
-    display.println(gain[0], 2);
-    display.setCursor(50, 27);
-    display.println(gain[1], 2);
-    display.setCursor(90, 27);
-    display.println(gain[2], 4);
+    if (invert_mode == 4)
+    {
+      display.setCursor(0, 27);
+      display.println(gain[0], 2);
+      display.setCursor(50, 27);
+      display.println(gain[1], 2);
+      display.setCursor(90, 27);
+      display.println(gain[2], 4);
+    }
+    else
+    {
+      display.setCursor(0, 27);
+      display.println(gain[3], 2);
+      display.setCursor(50, 27);
+      display.println(gain[4], 2);
+      display.setCursor(90, 27);
+      display.println(gain[5], 4);
+    }
 
     display.setCursor(0, 36);
     if (tuning_mode == 0)
