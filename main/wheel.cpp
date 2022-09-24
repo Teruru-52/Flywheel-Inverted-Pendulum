@@ -98,7 +98,7 @@ std::array<float, 3> WheelsController::GetWheelVelocity(float dt)
 
 void WheelsController::Invert_side_C(std::array<float, 3> theta, std::array<float, 3> dot_theta)
 {
-  if (abs(theta[0]) < start_angle && flag_control == false)
+  if (abs(theta[0]) < start_angle && abs(0.64 - theta[1]) < start_angle && flag_control == false)
   {
     flag_control = true;
     Serial.println("Start Side Invert C");
@@ -162,7 +162,7 @@ void WheelsController::Invert_point(std::array<float, 3> theta, std::array<float
     {
       input_X = kp * theta[0] + ki * dot_theta[0] + kd * input_sum_X;
       input_Y = kp * theta[1] + ki * dot_theta[1] + kd * input_sum_Y;
-      input_Z = ki * dot_theta[2] + kd * input_sum_Z;
+      // input_Z = 0.01 * (ki * dot_theta[2] + kd * input_sum_Z);
       input_Z = 0;
 
       input_sum_X += input_X;
