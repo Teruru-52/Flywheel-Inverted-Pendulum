@@ -27,11 +27,12 @@ void setup()
 
   pinMode(RESET_PIN, INPUT_PULLUP);
   pinMode(MODE_PIN, INPUT_PULLUP);
-  // attachInterrupt(RESET_PIN, Reset, FALLING);
-  // attachInterrupt(MODE_PIN, SelectInvertMode, FALLING);
+
+  attachInterrupt(RESET_PIN, Reset, FALLING);
+  attachInterrupt(MODE_PIN, SelectInvertMode, FALLING);
 
   // manualy tune PID gains
-  attachInterrupt(MODE_PIN, SelectTuningMode, FALLING);
+  // attachInterrupt(MODE_PIN, SelectTuningMode, FALLING);
 
   DispInit();
   // SetUpEncoder();
@@ -53,10 +54,10 @@ void loop()
   gain = controller.GetGain();
 
   // manualy tune PID gains
-  if (digitalRead(RESET_PIN) == LOW)
-  {
-    PID_Tuning();
-  }
+  // if (digitalRead(RESET_PIN) == LOW)
+  // {
+  //   PID_Tuning();
+  // }
 
   // controller.TestDrive();
 
