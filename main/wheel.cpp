@@ -102,7 +102,7 @@ void WheelsController::Invert_side_C(std::array<float, 3> theta, std::array<floa
   {
     flag_control = true;
     Serial.println("Start Side Invert C");
-    WheelBrakeOff();
+    wheel_c.BrakeOff();
   }
 
   if (flag_control == true)
